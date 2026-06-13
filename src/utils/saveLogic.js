@@ -152,7 +152,7 @@ function collectGiaDinhRows(hoSoId) {
                 trang_thai: statusSelect?.value || null,
                 nam_chet: numberOrNull(namChetInput?.value),
                 noi_o_hien_tai: row.children[5]?.querySelector('input')?.value?.trim() || null,
-                noi_o_chi_tiet: row.children[6]?.querySelector('input')?.value?.trim() || null,
+                noi_o_chi_tiet: row.children[6]?.querySelector('textarea, input')?.value?.trim() || null,
                 thu_tu: index + 1
             };
             return data;

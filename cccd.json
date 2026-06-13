@@ -1,0 +1,37 @@
+{
+  "cccd_expiry_rules": {
+    "renewal_ages": [14, 25, 40, 60],
+    "early_renewal_window_years": 2,
+    "rules": [
+      {
+        "issue_age_from": 0,
+        "issue_age_under": 12,
+        "expiry_age": 14
+      },
+      {
+        "issue_age_from": 12,
+        "issue_age_under": 23,
+        "expiry_age": 25
+      },
+      {
+        "issue_age_from": 23,
+        "issue_age_under": 38,
+        "expiry_age": 40
+      },
+      {
+        "issue_age_from": 38,
+        "issue_age_under": 58,
+        "expiry_age": 60
+      },
+      {
+        "issue_age_from": 58,
+        "expiry": "KHONG_THOI_HAN"
+      }
+    ],
+    "expiry_date_rule": "Ngày hết hạn bằng ngày sinh nhật tại tuổi phải cấp đổi tiếp theo",
+    "required_inputs": [
+      "date_of_birth",
+      "issue_date"
+    ]
+  }
+}

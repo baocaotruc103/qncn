@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../services/supabase';
 
 const relations = [
     'Cha đẻ',
@@ -11,7 +12,12 @@ const relations = [
     'Con nuôi hợp pháp',
     'Anh ruột',
     'Chị ruột',
-    'Em ruột'
+    'Em ruột',
+    'Ông nội',
+    'Bà nội',
+    'Ông ngoại',
+    'Bà ngoại',
+    'Cháu'
 ];
 
 const emptyFormData = {
@@ -27,6 +33,13 @@ const emptyFormData = {
     noiOChiTiet: ''
 };
 
+const getFamilyDetailAddress = (row = {}) => (
+    row.noiOChiTiet ||
+    row.noi_o_chi_tiet ||
+    row.noi_o_hien_tai_chi_tiet ||
+    ''
+);
+
 function mapInitialData(data) {
     return data.map(item => ({
         id: item.id || crypto.randomUUID(),
@@ -38,7 +51,7 @@ function mapInitialData(data) {
         trangThai: item.trang_thai || 'Sống',
         namChet: item.nam_chet || '',
         noiOHienTai: item.noi_o_hien_tai || '',
-        noiOChiTiet: item.noi_o_chi_tiet || ''
+        noiOChiTiet: getFamilyDetailAddress(item)
     }));
 }
 
@@ -47,6 +60,51 @@ export default function TabGiaDinh({ initialData = [] }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRowId, setEditingRowId] = useState(null);
     const [formData, setFormData] = useState(emptyFormData);
+    const [suggestions, setSuggestions] = useState({
+        ngheNghiep: [],
+        tinhThanhPho: ['Hà Nội', 'TP Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'],
+        xaPhuong: [],
+        noiOChiTiet: [],
+        noiOHienTai: []
+    });
+
+    useEffect(() => {
+        async function fetchSuggestions() {
+            const { data } = await supabase.from('gia_dinh').select('nghe_nghiep, noi_o_hien_tai, noi_o_chi_tiet');
+            if (data) {
+                const ngheNghiepSet = new Set();
+                const tinhThanhSet = new Set(['Hà Nội', 'TP Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ']);
+                const xaPhuongSet = new Set();
+                const chiTietSet = new Set();
+                const hienTaiSet = new Set();
+
+                data.forEach(item => {
+                    if (item.nghe_nghiep) ngheNghiepSet.add(item.nghe_nghiep.trim());
+                    if (item.noi_o_chi_tiet) chiTietSet.add(item.noi_o_chi_tiet.trim());
+                    if (item.noi_o_hien_tai) {
+                        hienTaiSet.add(item.noi_o_hien_tai.trim());
+                        const parts = item.noi_o_hien_tai.split(',').map(p => p.trim());
+                        if (parts.length > 0) {
+                            const ttp = parts.pop();
+                            if (ttp) tinhThanhSet.add(ttp);
+                            if (parts.length > 0) {
+                                xaPhuongSet.add(parts.join(', '));
+                            }
+                        }
+                    }
+                });
+
+                setSuggestions({
+                    ngheNghiep: Array.from(ngheNghiepSet).filter(Boolean),
+                    tinhThanhPho: Array.from(tinhThanhSet).filter(Boolean),
+                    xaPhuong: Array.from(xaPhuongSet).filter(Boolean),
+                    noiOChiTiet: Array.from(chiTietSet).filter(Boolean),
+                    noiOHienTai: Array.from(hienTaiSet).filter(Boolean)
+                });
+            }
+        }
+        fetchSuggestions();
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -86,7 +144,7 @@ export default function TabGiaDinh({ initialData = [] }) {
             namChet: row.namChet || '',
             tinhThanhPho: tinhThanhPho,
             xaPhuong: xaPhuong,
-            noiOChiTiet: row.noiOChiTiet || ''
+            noiOChiTiet: getFamilyDetailAddress(row)
         });
         setIsModalOpen(true);
     };
@@ -101,6 +159,8 @@ export default function TabGiaDinh({ initialData = [] }) {
         e.preventDefault();
 
         const noiOHienTai = [formData.xaPhuong, formData.tinhThanhPho].filter(Boolean).join(', ');
+        const existingRow = rows.find(row => row.id === editingRowId);
+        const noiOChiTiet = formData.noiOChiTiet || getFamilyDetailAddress(existingRow);
         const nextRow = {
             id: editingRowId || crypto.randomUUID(),
             relation: formData.quanHe,
@@ -111,7 +171,7 @@ export default function TabGiaDinh({ initialData = [] }) {
             trangThai: formData.trangThai,
             namChet: formData.namChet,
             noiOHienTai,
-            noiOChiTiet: formData.noiOChiTiet
+            noiOChiTiet
         };
 
         setRows(prev => (
@@ -137,6 +197,22 @@ export default function TabGiaDinh({ initialData = [] }) {
 
     return (
         <section id="tab3" className="tab-pane block">
+            <datalist id="ngheNghiepList">
+                {suggestions.ngheNghiep.map((item, idx) => <option key={`nn-${idx}`} value={item} />)}
+            </datalist>
+            <datalist id="tinhThanhList">
+                {suggestions.tinhThanhPho.map((item, idx) => <option key={`tt-${idx}`} value={item} />)}
+            </datalist>
+            <datalist id="xaPhuongList">
+                {suggestions.xaPhuong.map((item, idx) => <option key={`xp-${idx}`} value={item} />)}
+            </datalist>
+            <datalist id="chiTietList">
+                {suggestions.noiOChiTiet.map((item, idx) => <option key={`ct-${idx}`} value={item} />)}
+            </datalist>
+            <datalist id="noiOHienTaiList">
+                {suggestions.noiOHienTai.map((item, idx) => <option key={`ht-${idx}`} value={item} />)}
+            </datalist>
+
             <h3 className="text-xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4">
                 <i className="fas fa-users mr-2"></i>30. Thông tin quan hệ gia đình
             </h3>
@@ -213,6 +289,7 @@ export default function TabGiaDinh({ initialData = [] }) {
                                     <td className="p-1 border align-top pt-2" data-label="Nghề nghiệp">
                                         <input
                                             type="text"
+                                            list="ngheNghiepList"
                                             className="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded"
                                             value={row.ngheNghiep}
                                             onChange={(e) => updateRowField(row.id, 'ngheNghiep', e.target.value)}
@@ -238,18 +315,20 @@ export default function TabGiaDinh({ initialData = [] }) {
                                     <td className="p-1 border align-top pt-2" data-label="Nơi ở hiện tại">
                                         <input
                                             type="text"
+                                            list="noiOHienTaiList"
                                             className="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded"
                                             value={row.noiOHienTai}
                                             onChange={(e) => updateRowField(row.id, 'noiOHienTai', e.target.value)}
                                         />
                                     </td>
                                     <td className="p-1 border align-top pt-2" data-label="Nơi ở chi tiết">
-                                        <input
-                                            type="text"
-                                            className="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded"
-                                            value={row.noiOChiTiet}
+                                        <textarea
+                                            rows="2"
+                                            className="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded resize-y min-h-[40px]"
+                                            value={getFamilyDetailAddress(row)}
                                             onChange={(e) => updateRowField(row.id, 'noiOChiTiet', e.target.value)}
-                                        />
+                                            placeholder="Nơi ở chi tiết..."
+                                        ></textarea>
                                     </td>
                                     <td className="p-1 border text-center align-top pt-2">
                                         <div className="flex items-center justify-center gap-1">
@@ -315,7 +394,7 @@ export default function TabGiaDinh({ initialData = [] }) {
                                     </div>
                                     <div>
                                         <label className="block text-sm text-gray-700 font-medium mb-1">Nghề nghiệp</label>
-                                        <input type="text" name="ngheNghiep" value={formData.ngheNghiep} onChange={handleInputChange} className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="VD: Nông dân..." />
+                                        <input type="text" list="ngheNghiepList" name="ngheNghiep" value={formData.ngheNghiep} onChange={handleInputChange} className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="VD: Nông dân..." />
                                     </div>
                                 </div>
 
@@ -340,25 +419,18 @@ export default function TabGiaDinh({ initialData = [] }) {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-xs text-gray-500 mb-1">Tỉnh / Thành phố</label>
-                                            <input list="provinces" name="tinhThanhPho" value={formData.tinhThanhPho} onChange={handleInputChange} className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="VD: Hà Nội" />
-                                            <datalist id="provinces">
-                                                <option value="Hà Nội" />
-                                                <option value="TP Hồ Chí Minh" />
-                                                <option value="Đà Nẵng" />
-                                                <option value="Hải Phòng" />
-                                                <option value="Cần Thơ" />
-                                            </datalist>
+                                            <input list="tinhThanhList" name="tinhThanhPho" value={formData.tinhThanhPho} onChange={handleInputChange} className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="VD: Hà Nội" />
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-500 mb-1">Xã / Phường</label>
-                                            <input type="text" name="xaPhuong" value={formData.xaPhuong} onChange={handleInputChange} className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="VD: Phường Thanh Xuân Trung" />
+                                            <input type="text" list="xaPhuongList" name="xaPhuong" value={formData.xaPhuong} onChange={handleInputChange} className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="VD: Phường Thanh Xuân Trung" />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm text-gray-700 font-medium mb-1">Nơi ở chi tiết</label>
-                                    <input type="text" name="noiOChiTiet" value={formData.noiOChiTiet} onChange={handleInputChange} className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Số nhà, đường phố, thôn, xóm..." />
+                                    <input type="text" list="chiTietList" name="noiOChiTiet" value={formData.noiOChiTiet} onChange={handleInputChange} className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Số nhà, đường phố, thôn, xóm..." />
                                 </div>
                             </div>
                         </div>

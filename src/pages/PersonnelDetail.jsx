@@ -8,6 +8,7 @@ import TabGiaDinh from '../components/TabGiaDinh';
 import TabKhenKyLuat from '../components/TabKhenKyLuat';
 import TabNhanDang from '../components/TabNhanDang';
 import TabLuong from '../components/TabLuong';
+import PrintForm from '../components/PrintForm';
 
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -111,6 +112,7 @@ export default function PersonnelDetail() {
     };
 
     const handleExportPDF = async () => {
+        if (!window.confirm("Bạn có chắc muốn xuất lý lịch không")) return;
         if (isExporting) return;
         setIsExporting(true);
         const unpatch = patchHtml2Canvas();
@@ -118,9 +120,9 @@ export default function PersonnelDetail() {
             const element = pdfRef.current;
             if (!element) throw new Error("Không tìm thấy nội dung PDF.");
             
-            // html2pdf margin: [top, left, bottom, right] -> top 20, left 20, bottom 20, right 15
+            // html2pdf margin: [top, left, bottom, right] -> top 1cm, left 1cm, bottom 1cm, right 0.5cm
             const opt = {
-                margin: [20, 20, 20, 15], 
+                margin: [10, 10, 10, 10], 
                 filename: `CV_${data.hoSo.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}.pdf`,
                 image: { type: 'jpeg', quality: 0.8 }, // Giảm quality để nén ảnh
                 html2canvas: { scale: 1.5, useCORS: true }, // scale 1.5 đủ sắc nét mà không quá nặng
@@ -144,7 +146,6 @@ export default function PersonnelDetail() {
                 
             if (uploadError) {
                 console.warn('Lỗi khi upload lên Supabase:', uploadError);
-                alert(`Không thể lưu vào bucket file_qncn do lỗi phân quyền RLS: ${uploadError.message}. File PDF vẫn sẽ được tải về máy của bạn.`);
             }
 
             // Tự động kích hoạt tải file về máy từ blob
@@ -168,6 +169,7 @@ export default function PersonnelDetail() {
     };
 
     const handleExportPDFForm = async () => {
+        if (!window.confirm("Bạn có chắc muốn xuất lý lịch không")) return;
         if (isExportingForm) return;
         setIsExportingForm(true);
         const unpatch = patchHtml2Canvas();
@@ -199,9 +201,10 @@ export default function PersonnelDetail() {
                 span.style.wordBreak = 'break-word';
                 span.style.whiteSpace = 'pre-wrap';
                 span.style.border = 'none';
-                span.style.borderBottom = '1px dashed #94a3b8';
+                span.style.borderBottom = '0.6px dashed #000';
                 span.style.background = 'transparent';
-                span.style.padding = '4px 0';
+                span.style.padding = '6px 0 0';
+                span.style.lineHeight = '1.15';
                 span.style.display = 'block';
                 span.style.color = '#000';
                 
@@ -220,15 +223,26 @@ export default function PersonnelDetail() {
             // 3. Ẩn cột "Thao tác" và ép bảng vừa màn hình
             const tables = element.querySelectorAll('table');
             tables.forEach(table => {
-                table.style.width = '100%';
-                table.style.tableLayout = 'auto'; // Cho phép tự điều chỉnh chiều rộng
+                const isSalaryTable = table.classList.contains('salary-table');
+                table.style.setProperty('width', '100%', 'important');
+                table.style.setProperty('max-width', '100%', 'important');
+                table.style.setProperty('table-layout', 'fixed', 'important');
+                table.style.setProperty('border-collapse', 'collapse', 'important');
+                table.style.setProperty('font-size', isSalaryTable ? '6.2px' : '11px', 'important');
+                table.style.setProperty('line-height', isSalaryTable ? '1.25' : '1.35', 'important');
                 
                 // Bỏ min-width để bảng không bị tràn
                 const cells = table.querySelectorAll('th, td');
                 cells.forEach(cell => {
-                    cell.style.minWidth = '0';
-                    cell.style.whiteSpace = 'normal';
-                    cell.style.wordBreak = 'break-word';
+                    cell.style.setProperty('min-width', '0', 'important');
+                    cell.style.setProperty('white-space', 'normal', 'important');
+                    cell.style.setProperty('word-break', 'break-word', 'important');
+                    cell.style.setProperty('overflow-wrap', 'anywhere', 'important');
+                    cell.style.setProperty('vertical-align', 'middle', 'important');
+                    cell.style.setProperty('border', '0.6px solid #000', 'important');
+                    cell.style.setProperty('padding', isSalaryTable ? '3px' : '7px 5px', 'important');
+                    cell.style.setProperty('line-height', isSalaryTable ? '1.25' : '1.35', 'important');
+                    cell.style.setProperty('text-align', cell.tagName === 'TH' || cell.classList.contains('text-center') ? 'center' : 'left', 'important');
                 });
                 
                 // Tìm cột Thao tác
@@ -316,11 +330,21 @@ export default function PersonnelDetail() {
                 div.style.setProperty('overflow-x', 'visible', 'important');
             });
 
+            // Chuẩn hóa trang form theo vùng in A4 sau khi trừ lề PDF.
+            const a4Pages = element.querySelectorAll('.a4-page');
+            a4Pages.forEach(p => {
+                hiddenElements.push({ el: p, isCssText: true, cssText: p.style.cssText });
+                p.style.setProperty('width', '196mm', 'important');
+                p.style.setProperty('max-width', '196mm', 'important');
+                p.style.setProperty('padding', '4mm 5mm', 'important');
+                p.style.setProperty('overflow', 'hidden', 'important');
+            });
+
             const opt = {
-                margin: [10, 10, 10, 10], 
+                margin: [7, 7, 7, 7], 
                 filename: `Form_${data.hoSo.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 740 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
             };
 
@@ -339,7 +363,6 @@ export default function PersonnelDetail() {
                 
             if (uploadError) {
                 console.warn('Lỗi khi upload lên Supabase:', uploadError);
-                alert(`Không thể lưu vào bucket file_qncn do lỗi phân quyền RLS: ${uploadError.message}. File PDF Form vẫn sẽ được tải về máy của bạn.`);
             }
 
             const blobUrl = URL.createObjectURL(pdfBlob);
@@ -706,21 +729,21 @@ export default function PersonnelDetail() {
                                 </h2>
                                 
                                 <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6">
-                                    <div className="bg-blue-50 p-3 rounded-lg text-center border border-blue-100">
-                                        <div className="text-2xl font-black text-blue-700">{hoSo.xep_loai_xuat_sac || 0}</div>
-                                        <div className="text-[10px] sm:text-xs uppercase font-semibold text-gray-600 mt-1">Năm Xuất sắc</div>
+                                    <div className="bg-blue-50 p-3 rounded-lg text-center border border-blue-100 flex flex-col justify-start">
+                                        <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-600 mb-1">Năm HTXSNV</div>
+                                        <div className="text-xs sm:text-sm text-blue-700 break-words">{hoSo.xep_loai_xuat_sac ? String(hoSo.xep_loai_xuat_sac).replace(/,\s*/g, ', ') : 0}</div>
                                     </div>
-                                    <div className="bg-green-50 p-3 rounded-lg text-center border border-green-100">
-                                        <div className="text-2xl font-black text-green-600">{hoSo.xep_loai_tot || 0}</div>
-                                        <div className="text-[10px] sm:text-xs uppercase font-semibold text-gray-600 mt-1">Năm Tốt</div>
+                                    <div className="bg-green-50 p-3 rounded-lg text-center border border-green-100 flex flex-col justify-start">
+                                        <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-600 mb-1">Năm HTTNV</div>
+                                        <div className="text-xs sm:text-sm text-green-600 break-words">{hoSo.xep_loai_tot ? String(hoSo.xep_loai_tot).replace(/,\s*/g, ', ') : 0}</div>
                                     </div>
-                                    <div className="bg-gray-50 p-3 rounded-lg text-center border border-gray-200">
-                                        <div className="text-2xl font-black text-gray-600">{hoSo.xep_loai_hoan_thanh || 0}</div>
-                                        <div className="text-[10px] sm:text-xs uppercase font-semibold text-gray-500 mt-1">Hoàn thành</div>
+                                    <div className="bg-gray-50 p-3 rounded-lg text-center border border-gray-200 flex flex-col justify-start">
+                                        <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 mb-1">Năm HTNV</div>
+                                        <div className="text-xs sm:text-sm text-gray-600 break-words">{hoSo.xep_loai_hoan_thanh ? String(hoSo.xep_loai_hoan_thanh).replace(/,\s*/g, ', ') : 0}</div>
                                     </div>
-                                    <div className="bg-red-50 p-3 rounded-lg text-center border border-red-100">
-                                        <div className="text-2xl font-black text-red-500">{hoSo.xep_loai_khong_hoan_thanh || 0}</div>
-                                        <div className="text-[10px] sm:text-xs uppercase font-semibold text-gray-600 mt-1">Không HT</div>
+                                    <div className="bg-red-50 p-3 rounded-lg text-center border border-red-100 flex flex-col justify-start">
+                                        <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-600 mb-1">Năm KHTNV</div>
+                                        <div className="text-xs sm:text-sm text-red-500 break-words">{hoSo.xep_loai_khong_hoan_thanh ? String(hoSo.xep_loai_khong_hoan_thanh).replace(/,\s*/g, ', ') : 0}</div>
                                     </div>
                                 </div>
 
@@ -839,9 +862,11 @@ export default function PersonnelDetail() {
                                                 return (
                                                     <tr key={l.id} className={`hover:bg-gray-50 transition-colors ${isLatest ? 'bg-blue-50/30' : ''}`}>
                                                         <td className="px-4 py-3 text-center text-gray-400 font-medium">{index + 1}</td>
-                                                        <td className={`px-4 py-3 ${isLatest ? 'text-gray-800 font-bold flex items-center' : 'text-gray-600 font-medium'}`}>
-                                                            {isLatest && <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>}
-                                                            {l.tu_thang || ''} - {l.den_thang || 'Nay'}
+                                                        <td className={`px-4 py-3 ${isLatest ? 'text-gray-800 font-bold' : 'text-gray-600 font-medium'}`}>
+                                                            <div className="flex items-center">
+                                                                {isLatest && <span className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0 animate-pulse"></span>}
+                                                                <span>{l.tu_thang || ''} - {l.den_thang || 'Nay'}</span>
+                                                            </div>
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <p className="font-bold text-gray-800">{l.don_vi_cap_truc_thuoc || '-'}</p>
@@ -888,14 +913,8 @@ export default function PersonnelDetail() {
             </div>
 
             <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
-                <div ref={pdfFormRef} id="pdf-form-content" className="bg-white p-6 pdf-form-mode" style={{ width: '800px', minHeight: '1122px', color: '#000' }}>
-                    <h1 className="text-2xl font-bold text-center mb-6 uppercase">HỒ SƠ QUÂN NHÂN</h1>
-                    <div className="mb-6"><TabThongTinChung initialData={hoSo} /></div>
-                    <div className="mb-6"><TabDaoTao initialData={daoTao} /></div>
-                    <div className="mb-6"><TabGiaDinh initialData={giaDinh} /></div>
-                    <div className="mb-6"><TabKhenKyLuat initialKhenThuong={khenThuong} initialKyLuat={kyLuat} /></div>
-                    <div className="mb-6"><TabNhanDang initialData={hoSo} /></div>
-                    <div className="mb-6"><TabLuong initialData={luong} /></div>
+                <div ref={pdfFormRef} id="pdf-form-content" className="bg-white pdf-form-mode" style={{ width: '196mm', minHeight: '283mm', color: '#000' }}>
+                    <PrintForm data={data} />
                 </div>
             </div>
         </div>

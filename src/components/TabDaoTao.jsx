@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../services/supabase';
 
 const emptyFormData = {
     loai: '',
@@ -24,6 +25,28 @@ export default function TabDaoTao({ initialData = [], initialHoSo = {} }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRowId, setEditingRowId] = useState(null);
     const [formData, setFormData] = useState(emptyFormData);
+    const [suggestions, setSuggestions] = useState({ trinhDo: [], nganhNghe: [] });
+
+    useEffect(() => {
+        async function fetchSuggestions() {
+            const { data } = await supabase.from('ho_so_qncn').select('trinh_do_dao_tao_cao_nhat, trinh_do_lien_quan_cnqs, nganh_nghe_cao_nhat, nganh_nghe_lien_quan_cnqs');
+            if (data) {
+                const trinhDoSet = new Set();
+                const nganhNgheSet = new Set();
+                data.forEach(item => {
+                    if (item.trinh_do_dao_tao_cao_nhat) trinhDoSet.add(item.trinh_do_dao_tao_cao_nhat.trim());
+                    if (item.trinh_do_lien_quan_cnqs) trinhDoSet.add(item.trinh_do_lien_quan_cnqs.trim());
+                    if (item.nganh_nghe_cao_nhat) nganhNgheSet.add(item.nganh_nghe_cao_nhat.trim());
+                    if (item.nganh_nghe_lien_quan_cnqs) nganhNgheSet.add(item.nganh_nghe_lien_quan_cnqs.trim());
+                });
+                setSuggestions({
+                    trinhDo: Array.from(trinhDoSet).filter(Boolean),
+                    nganhNghe: Array.from(nganhNgheSet).filter(Boolean)
+                });
+            }
+        }
+        fetchSuggestions();
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -87,6 +110,13 @@ export default function TabDaoTao({ initialData = [], initialHoSo = {} }) {
 
     return (
         <section id="tab2" className="tab-pane block">
+            <datalist id="trinhDoList">
+                {suggestions.trinhDo.map((item, idx) => <option key={`td-${idx}`} value={item} />)}
+            </datalist>
+            <datalist id="nganhNgheList">
+                {suggestions.nganhNghe.map((item, idx) => <option key={`nn-${idx}`} value={item} />)}
+            </datalist>
+
             <h3 className="text-xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4">
                 <i className="fas fa-graduation-cap mr-2"></i>29. Thông tin đào tạo
             </h3>
@@ -98,11 +128,11 @@ export default function TabDaoTao({ initialData = [], initialHoSo = {} }) {
                 </div>
                 <div className="md:col-span-2 lg:col-span-1">
                     <label className="block text-sm font-medium text-gray-700">29.2 Trình độ đào tạo cao nhất</label>
-                    <input type="text" defaultValue={initialHoSo?.trinh_do_dao_tao_cao_nhat || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
+                    <input type="text" list="trinhDoList" defaultValue={initialHoSo?.trinh_do_dao_tao_cao_nhat || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
                 </div>
                 <div className="md:col-span-2 lg:col-span-1">
                     <label className="block text-sm font-medium text-gray-700">29.3 Ngành nghề cao nhất</label>
-                    <input type="text" defaultValue={initialHoSo?.nganh_nghe_cao_nhat || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
+                    <input type="text" list="nganhNgheList" defaultValue={initialHoSo?.nganh_nghe_cao_nhat || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">29.4 Năm tốt nghiệp</label>
@@ -110,11 +140,11 @@ export default function TabDaoTao({ initialData = [], initialHoSo = {} }) {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">29.5 Trình độ liên quan CNQS</label>
-                    <input type="text" defaultValue={initialHoSo?.trinh_do_lien_quan_cnqs || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
+                    <input type="text" list="trinhDoList" defaultValue={initialHoSo?.trinh_do_lien_quan_cnqs || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">29.6 Ngành nghề liên quan CNQS</label>
-                    <input type="text" defaultValue={initialHoSo?.nganh_nghe_lien_quan_cnqs || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
+                    <input type="text" list="nganhNgheList" defaultValue={initialHoSo?.nganh_nghe_lien_quan_cnqs || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
                 </div>
             </div>
 

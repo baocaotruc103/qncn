@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản xem chi tiết hồ sơ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Thiết lập cho bản in A4 */
+        :root {
+            --page-width: 210mm;
+            --page-height: 297mm;
+        }
+
+        body {
+            background-color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Times New Roman', Times, serif; /* Font chuẩn cho văn bản hành chính */
+            font-size: 14px;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        .a4-page {
+            width: var(--page-width);
+            min-height: var(--page-height);
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 15mm 10mm 10mm 15mm; /* Trên 1.5cm, Phải 1cm, Dưới 1cm, Trái 1.5cm */
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Tối ưu khi in thực tế */
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+                padding: 15mm 10mm 10mm 15mm; /* Áp dụng lề chính xác khi in */
+                page-break-after: always;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+
+        /* Style cho các phần tử văn bản */
+        h1, h2, h3 { margin: 0; }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 3px;
+        }
+
+        .field-group {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+        
+        .field-label {
+            font-weight: bold;
+            margin-right: 5px;
+            white-space: nowrap;
+        }
+
+        .field-value {
+            flex-grow: 1;
+            border-bottom: 1px dotted #888;
+            min-height: 18px;
+            padding-left: 5px;
+        }
+
+        /* Style cho bảng */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 6px;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #f3f4f6;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Tiện ích in đậm, in nghiêng */
+        .bold { font-weight: bold; }
+        .italic { font-style: italic; }
+        .text-center { text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="no-print mb-4 bg-white p-4 rounded shadow-md w-[210mm] text-center">
+        <h2 class="text-xl font-bold text-blue-600 mb-2">Bản Xem Trước (A4 Layout)</h2>
+        <p class="text-gray-600">Sử dụng tổ hợp phím <strong>Ctrl + P</strong> (hoặc <strong>Cmd + P</strong> trên Mac) để in hoặc lưu thành file PDF.</p>
+    </div>
+
+    <!-- Trang 1 -->
+    <div class="a4-page">
+        <!-- Tiêu đề -->
+        <div class="text-center mb-6">
+            <h1 class="text-xl font-bold uppercase">Lý Lịch Trích Ngang / Bản Chi Tiết Nhân Sự</h1>
+        </div>
+
+        <!-- I. THÔNG TIN CHUNG -->
+        <div class="section-title">I. Thông tin chung</div>
+        
+        <div class="grid grid-cols-12 gap-x-4">
+            <div class="col-span-8 field-group"><span class="field-label">1. Họ tên khai sinh:</span><span class="field-value uppercase bold">TRẦN THỊ THU HUYỀN</span></div>
+            <div class="col-span-4 field-group"><span class="field-label">2. Ngày sinh:</span><span class="field-value">23/07/1990</span></div>
+            
+            <div class="col-span-12 field-group"><span class="field-label">3. Đơn vị:</span><span class="field-value">Khoa Gây mê, Bệnh viện Quân y 103</span></div>
+            
+            <div class="col-span-6 field-group"><span class="field-label">4. Tháng năm vào quân đội:</span><span class="field-value">10/2011</span></div>
+            <div class="col-span-6 field-group"><span class="field-label">7. Nhóm máu:</span><span class="field-value">O</span></div>
+
+            <div class="col-span-4 field-group"><span class="field-label">5. Số CMQNCN:</span><span class="field-value">659011140456</span></div>
+            <div class="col-span-4 field-group"><span class="field-label">5.1 Ngày cấp:</span><span class="field-value">04/04/2019</span></div>
+            <div class="col-span-4 field-group"><span class="field-label">5.2 Nơi cấp:</span><span class="field-value">Học viện Quân y</span></div>
+
+            <div class="col-span-4 field-group"><span class="field-label">8. Số CCCD:</span><span class="field-value">001190032893</span></div>
+            <div class="col-span-4 field-group"><span class="field-label">8.1 Ngày cấp:</span><span class="field-value">25/04/2021</span></div>
+            <div class="col-span-4 field-group"><span class="field-label">8.2 Nơi cấp:</span><span class="field-value text-xs">Cục CSQLHC về TTXH</span></div>
+            
+            <div class="col-span-4 field-group"><span class="field-label">8.3 Hạn sử dụng:</span><span class="field-value">23/07/2030</span></div>
+            <div class="col-span-4 field-group"><span class="field-label">9. Trình độ ngoại ngữ:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">10. Khối quân:</span><span class="field-value">Dự toán</span></div>
+
+            <div class="col-span-6 field-group"><span class="field-label">11. Họ tên thường dùng:</span><span class="field-value">Trần Thị Thu Huyền</span></div>
+            <div class="col-span-6 field-group"><span class="field-label">12. Tình trạng hôn nhân:</span><span class="field-value">Đã kết hôn</span></div>
+
+            <div class="col-span-12 field-group"><span class="field-label">6. Quê quán:</span><span class="field-value">Hát Môn, Hà Nội</span></div>
+            
+            <div class="col-span-12 field-group mt-2"><span class="field-label italic underline">Nơi tạm trú:</span></div>
+            <div class="col-span-12 field-group"><span class="field-label">15. Xã/Phường, Tỉnh/Thành:</span><span class="field-value"></span></div>
+            <div class="col-span-12 field-group"><span class="field-label">16. Chi tiết:</span><span class="field-value"></span></div>
+
+            <div class="col-span-12 field-group mt-2"><span class="field-label italic underline">Nơi ở hiện tại:</span></div>
+            <div class="col-span-12 field-group"><span class="field-label">17. Xã/Phường, Tỉnh/Thành:</span><span class="field-value">Bình Minh, Hà Nội</span></div>
+            <div class="col-span-12 field-group"><span class="field-label">18. Chi tiết:</span><span class="field-value">SN1010, Tòa HH01C KĐT Thanh Hà</span></div>
+        </div>
+
+        <!-- II. CÁC MỐC THỜI GIAN -->
+        <div class="section-title mt-4">II. Các mốc thời gian</div>
+        <div class="grid grid-cols-12 gap-x-4">
+            <div class="col-span-6 field-group"><span class="field-label">19. Tháng, năm Tuyển dụng:</span><span class="field-value">10/2011</span></div>
+            <div class="col-span-6 field-group"><span class="field-label">20. Tháng, năm Nhập ngũ:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">21. Tháng, năm Xuất ngũ:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">22. Tháng, năm Tái ngũ:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label"></span><span class="field-value border-none"></span></div>
+            
+            <div class="col-span-4 field-group"><span class="field-label">23. HSQ-BS sang QNCN:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">24. HSQ-BS sang CNVQP:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">25. CNVQP sang QNCN:</span><span class="field-value"></span></div>
+
+            <div class="col-span-4 field-group"><span class="field-label">26. Ngày vào Đoàn:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">27. Ngày vào Đảng:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">Ngày chính thức:</span><span class="field-value"></span></div>
+        </div>
+
+        <!-- III. THÔNG TIN ĐÀO TẠO -->
+        <div class="section-title mt-4">III. Thông tin đào tạo</div>
+        <div class="grid grid-cols-12 gap-x-4">
+            <div class="col-span-6 field-group"><span class="field-label">Trình độ văn hóa:</span><span class="field-value">12/12</span></div>
+            <div class="col-span-6 field-group"><span class="field-label">Trình độ đào tạo cao nhất:</span><span class="field-value">Cao đẳng</span></div>
+            
+            <div class="col-span-6 field-group"><span class="field-label">Ngành nghề cao nhất:</span><span class="field-value">Điều dưỡng</span></div>
+            <div class="col-span-6 field-group"><span class="field-label">Năm tốt nghiệp:</span><span class="field-value">2018</span></div>
+
+            <div class="col-span-6 field-group"><span class="field-label">Trình độ liên quan CNQS:</span><span class="field-value">Cao đẳng</span></div>
+            <div class="col-span-6 field-group"><span class="field-label">Ngành nghề CNQS:</span><span class="field-value">Điều dưỡng</span></div>
+        </div>
+        
+        <div class="font-bold mt-2 mb-1 text-sm italic">Quá trình đào tạo lại:</div>
+        <table>
+            <thead>
+                <tr>
+                    <th class="w-16">Loại</th>
+                    <th class="w-20">Bắt đầu</th>
+                    <th class="w-20">Kết thúc</th>
+                    <th class="w-32">Bậc đào tạo</th>
+                    <th>Tên trường</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">Chính quy</td>
+                    <td class="text-center">08/2016</td>
+                    <td class="text-center">05/2018</td>
+                    <td class="text-center">Cao đẳng</td>
+                    <td>Cao đẳng Y - Dược Asean</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- IV. ĐẶC ĐIỂM NHẬN DẠNG & SỨC KHỎE -->
+        <div class="section-title mt-4">IV. Đặc điểm nhận dạng & Sức khỏe</div>
+        <div class="grid grid-cols-12 gap-x-4">
+            <div class="col-span-4 field-group"><span class="field-label">Chiều cao (m):</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">Sống mũi:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">Nếp tai dưới:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">Dái tai:</span><span class="field-value"></span></div>
+            <div class="col-span-8 field-group"><span class="field-label">Dấu vết riêng:</span><span class="field-value"></span></div>
+            <div class="col-span-6 field-group"><span class="field-label">Hạn dùng:</span><span class="field-value"></span></div>
+            <div class="col-span-12 field-group"><span class="field-label">Thông tin sức khỏe:</span><span class="field-value"></span></div>
+        </div>
+    </div>
+
+    <!-- Trang 2 -->
+    <div class="a4-page">
+        <!-- V. THÔNG TIN QUAN HỆ GIA ĐÌNH -->
+        <div class="section-title">V. Thông tin quan hệ gia đình</div>
+        <table>
+            <thead>
+                <tr>
+                    <th class="w-20">Mối quan hệ</th>
+                    <th>Họ và tên / SĐT</th>
+                    <th class="w-16">Năm sinh</th>
+                    <th class="w-20">Nghề nghiệp</th>
+                    <th class="w-16">Trạng thái</th>
+                    <th>Nơi ở hiện tại</th>
+                    <th>Nơi ở chi tiết</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="font-bold text-center">Cha đẻ</td>
+                    <td>Trần Đình Chung</td>
+                    <td class="text-center">1958</td>
+                    <td>Làm ruộng</td>
+                    <td class="text-center">Sống</td>
+                    <td>Hát Môn, Hà Nội</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="font-bold text-center">Mẹ đẻ</td>
+                    <td>Vương Thị Hiệp</td>
+                    <td class="text-center">1966</td>
+                    <td>Làm ruộng</td>
+                    <td class="text-center">Sống</td>
+                    <td>Hát Môn, Hà Nội</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="font-bold text-center">Cha vợ (chồng)</td>
+                    <td>Phan Văn Thinh</td>
+                    <td class="text-center">1958</td>
+                    <td>Hưu trí</td>
+                    <td class="text-center">Sống</td>
+                    <td>Kiều Phú, Hà Nội</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="font-bold text-center">Mẹ vợ (chồng)</td>
+                    <td>Nguyễn Thị Trúc</td>
+                    <td class="text-center">1960</td>
+                    <td>Làm ruộng</td>
+                    <td class="text-center">Sống</td>
+                    <td>Kiều Phú, Hà Nội</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="font-bold text-center">Vợ (chồng)</td>
+                    <td>Phan Duy Thắng<br><span class="text-xs text-gray-600">0988231083</span></td>
+                    <td class="text-center">1983</td>
+                    <td>Bộ đội</td>
+                    <td class="text-center">Sống</td>
+                    <td>Bình Minh, Hà Nội</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="font-bold text-center">Con đẻ</td>
+                    <td>Phan Trần Duy Anh</td>
+                    <td class="text-center">2014</td>
+                    <td>Học sinh</td>
+                    <td class="text-center">Sống</td>
+                    <td>Bình Minh, Hà Nội</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="font-bold text-center">Con đẻ</td>
+                    <td>Phan Trần Minh Tuệ</td>
+                    <td class="text-center">2016</td>
+                    <td>Học sinh</td>
+                    <td class="text-center">Sống</td>
+                    <td>Bình Minh, Hà Nội</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- VI. ĐÁNH GIÁ, KHEN THƯỞNG & KỶ LUẬT -->
+        <div class="section-title mt-6">VI. Đánh giá, Khen thưởng & Kỷ luật</div>
+        
+        <div class="font-bold mt-2 mb-2 text-sm italic underline">1. Xếp loại hoàn thành nhiệm vụ các năm:</div>
+        <div class="grid grid-cols-12 gap-x-4 mb-4">
+            <div class="col-span-12 field-group"><span class="field-label">Xuất sắc:</span><span class="field-value">2022, 2025</span></div>
+            <div class="col-span-12 field-group"><span class="field-label">Tốt:</span><span class="field-value">2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2023, 2024</span></div>
+            <div class="col-span-12 field-group"><span class="field-label">Hoàn thành:</span><span class="field-value"></span></div>
+            <div class="col-span-12 field-group"><span class="field-label">Không hoàn thành:</span><span class="field-value"></span></div>
+        </div>
+
+        <div class="font-bold mt-2 mb-1 text-sm italic underline">2. Thông tin khen thưởng:</div>
+        <table>
+            <thead>
+                <tr>
+                    <th class="w-24">Ngày tháng năm</th>
+                    <th class="w-32">Đánh giá xếp loại</th>
+                    <th>Lý do</th>
+                    <th class="w-28">Loại</th>
+                    <th class="w-32">Cấp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">01/12/2022</td>
+                    <td class="text-center">HTXSNV</td>
+                    <td>Đạt thành tích xuất sắc trong thực hiện nhiệm vụ</td>
+                    <td class="text-center">Chiến sỹ thi đua</td>
+                    <td class="text-center">Bệnh viện Quân y</td>
+                </tr>
+                <tr>
+                    <td class="text-center">01/12/2025</td>
+                    <td class="text-center">HTXSNV</td>
+                    <td>Đạt thành tích xuất sắc trong thực hiện nhiệm vụ</td>
+                    <td class="text-center">Chiến sỹ thi đua</td>
+                    <td class="text-center">Bệnh viện Quân y</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="font-bold mt-2 mb-1 text-sm italic underline">3. Thông tin kỷ luật:</div>
+        <table>
+            <thead>
+                <tr>
+                    <th class="w-24">Ngày tháng năm</th>
+                    <th class="w-32">Đánh giá xếp loại</th>
+                    <th>Lý do</th>
+                    <th class="w-28">Loại</th>
+                    <th class="w-32">Cấp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="5" class="text-center italic text-gray-500 py-4">Không có dữ liệu kỷ luật</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- VII. THÔNG TIN LƯƠNG & QUÁ TRÌNH CÔNG TÁC -->
+        <div class="section-title mt-6">VII. Thông tin lương & Quá trình công tác</div>
+        <div class="grid grid-cols-12 gap-x-4 mb-4">
+            <div class="col-span-4 field-group"><span class="field-label">Bắt đầu đóng BHXH:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">Số sổ:</span><span class="field-value"></span></div>
+            <div class="col-span-4 field-group"><span class="field-label">Theo chế độ:</span><span class="field-value"></span></div>
+        </div>
+
+        <div class="font-bold mt-2 mb-1 text-sm italic">Quá trình công tác và hưởng lương:</div>
+        <div class="overflow-x-auto">
+            <table class="text-[9px] w-full">
+                <thead>
+                    <tr>
+                        <th class="p-1">Từ tháng</th>
+                        <th class="p-1">Đến tháng</th>
+                        <th class="p-1">ĐV trực thuộc</th>
+                        <th class="p-1">ĐV chi tiết</th>
+                        <th class="p-1">Loại thay đổi</th>
+                        <th class="p-1">Diện QL</th>
+                        <th class="p-1">Diện bố trí</th>
+                        <th class="p-1">Cấp bậc</th>
+                        <th class="p-1">Chức vụ, CNQS</th>
+                        <th class="p-1">T.N đảm nhận CNQS</th>
+                        <th class="p-1">Loại (ngạch)</th>
+                        <th class="p-1">Nhóm</th>
+                        <th class="p-1">Bậc</th>
+                        <th class="p-1">Hệ số</th>
+                        <th class="p-1">PC VK(%)</th>
+                        <th class="p-1">HS BL</th>
+                        <th class="p-1">PC C.Vụ</th>
+                        <th class="p-1">PC TN Nghề</th>
+                        <th class="p-1">T.N bắt đầu nhận</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="19" class="text-center italic text-gray-500 py-6">Chưa có dữ liệu quá trình công tác</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="flex justify-end mt-12">
+            <div class="text-center">
+                <p class="italic mb-1">........, ngày ..... tháng ..... năm .......</p>
+                <p class="font-bold">Người khai</p>
+                <p class="italic text-xs mb-12">(Ký và ghi rõ họ tên)</p>
+                <p class="font-bold">TRẦN THỊ THU HUYỀN</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

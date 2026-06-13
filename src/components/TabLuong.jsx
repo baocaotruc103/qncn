@@ -52,6 +52,82 @@ const getHeSo = (loaiNgach, nhom, bac) => {
     return '';
 };
 
+const parseMonthYear = (str) => {
+    if (!str) return null;
+    const parts = str.split('/');
+    if (parts.length === 2) {
+        return { month: parseInt(parts[0], 10), year: parseInt(parts[1], 10) };
+    }
+    return null;
+};
+
+const getDiffMonths = (start, end) => {
+    if (!start || !end) return 0;
+    return (end.year - start.year) * 12 + (end.month - start.month);
+};
+
+const calculatePcThamNienNghe = (tuThangStr, dienQuanLy, hoSo, pastRows = []) => {
+    const startStr = hoSo?.thang_nam_vao_quan_doi;
+    if (!startStr || !tuThangStr) return '';
+    
+    const start = parseMonthYear(startStr);
+    const current = parseMonthYear(tuThangStr);
+    if (!start || !current) return '';
+    
+    let eligibleMonths = getDiffMonths(start, current);
+    if (eligibleMonths < 0) return 0;
+
+    if ((!pastRows || pastRows.length === 0) && ((dienQuanLy || '').toUpperCase().includes('VCQP'))) {
+        const milestone = { month: 7, year: 2016 };
+        if (getDiffMonths(start, milestone) > 0) {
+            eligibleMonths -= getDiffMonths(start, milestone);
+        }
+    }
+
+    if (pastRows && pastRows.length > 0) {
+        for (const row of pastRows) {
+            const rStart = parseMonthYear(row.tuThang);
+            let rEnd = parseMonthYear(row.denThang);
+            if (!rStart) continue;
+            
+            if (rEnd) {
+                rEnd.month += 1;
+                if (rEnd.month > 12) { rEnd.month = 1; rEnd.year += 1; }
+            } else {
+                rEnd = { ...current };
+            }
+
+            if (getDiffMonths(rEnd, current) < 0) rEnd = { ...current };
+            if (getDiffMonths(rStart, rEnd) <= 0) continue;
+
+            const dq = (row.dienQuanLy || '').toUpperCase();
+            const isVCQP = dq.includes('VCQP') || dq.includes('VIÊN CHỨC');
+            const isLDHD = dq.includes('HỢP ĐỒNG') || dq.includes('LĐHĐ');
+
+            if (isLDHD) {
+                eligibleMonths -= getDiffMonths(rStart, rEnd);
+            } else if (isVCQP) {
+                const milestone = { month: 7, year: 2016 };
+                let endBeforeMilestone = { ...rEnd };
+                if (getDiffMonths(rEnd, milestone) > 0) {
+                    // rEnd is before milestone
+                } else {
+                    endBeforeMilestone = milestone;
+                }
+                
+                if (getDiffMonths(rStart, endBeforeMilestone) > 0) {
+                    eligibleMonths -= getDiffMonths(rStart, endBeforeMilestone);
+                }
+            }
+        }
+    }
+
+    if (eligibleMonths >= 60) {
+        return 5 + Math.floor((eligibleMonths - 60) / 12);
+    }
+    return 0;
+};
+
 const salaryFields = [
     ['tuThang', 'Từ tháng', 'text', 'mm/yyyy'],
     ['denThang', 'Đến tháng', 'text', 'mm/yyyy'],
@@ -115,12 +191,34 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
                     nextForm.heSo = calculatedHeSo;
                 }
             }
+            if (name === 'tuThang') {
+                nextForm.thamNienBatDau = value;
+                nextForm.thamNienCNQS = value;
+                nextForm.pcThamNienNghe = calculatePcThamNienNghe(value, nextForm.dienQuanLy, initialHoSo, rows);
+            }
+            if (name === 'dienQuanLy' && nextForm.tuThang) {
+                nextForm.pcThamNienNghe = calculatePcThamNienNghe(nextForm.tuThang, value, initialHoSo, rows);
+            }
             return nextForm;
         });
     };
 
     const updateRowField = (id, field, value) => {
-        setRows(prev => prev.map(row => (row.id === id ? { ...row, [field]: value } : row)));
+        setRows(prev => prev.map(row => {
+            if (row.id === id) {
+                const nextRow = { ...row, [field]: value };
+                if (field === 'tuThang') {
+                    nextRow.thamNienBatDau = value;
+                    nextRow.thamNienCNQS = value;
+                    nextRow.pcThamNienNghe = calculatePcThamNienNghe(value, nextRow.dienQuanLy, initialHoSo, prev.filter(r => r.id !== id));
+                }
+                if (field === 'dienQuanLy' && nextRow.tuThang) {
+                    nextRow.pcThamNienNghe = calculatePcThamNienNghe(nextRow.tuThang, value, initialHoSo, prev.filter(r => r.id !== id));
+                }
+                return nextRow;
+            }
+            return row;
+        }));
     };
 
     const openAddModal = () => {
@@ -131,12 +229,38 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
             initialForm = { ...lastRow };
             // Xóa các trường cần nhập mới
             initialForm.id = '';
-            initialForm.tuThang = '';
-            initialForm.denThang = '';
             initialForm.loaiThayDoi = '';
+            
+            // Tính toán tuThang từ denThang của hàng trước
+            if (lastRow.denThang) {
+                const parts = lastRow.denThang.split('/');
+                if (parts.length === 2) {
+                    let m = parseInt(parts[0], 10);
+                    let y = parseInt(parts[1], 10);
+                    if (!isNaN(m) && !isNaN(y)) {
+                        m += 1;
+                        if (m > 12) { m = 1; y += 1; }
+                        const nextMonthStr = `${m.toString().padStart(2, '0')}/${y}`;
+                        initialForm.tuThang = nextMonthStr;
+                        initialForm.thamNienBatDau = nextMonthStr;
+                        initialForm.thamNienCNQS = nextMonthStr;
+                    }
+                }
+            } else {
+                initialForm.tuThang = '';
+                initialForm.thamNienBatDau = '';
+                initialForm.thamNienCNQS = '';
+            }
+            initialForm.denThang = '';
+
             // Gợi ý hệ số tự động nếu hợp lệ
             const suggestedHeSo = getHeSo(initialForm.loaiNgach, initialForm.nhom, initialForm.bac);
             if (suggestedHeSo) initialForm.heSo = suggestedHeSo;
+
+            // Tính pcThamNienNghe
+            if (initialForm.tuThang) {
+                initialForm.pcThamNienNghe = calculatePcThamNienNghe(initialForm.tuThang, initialForm.dienQuanLy, initialHoSo, rows);
+            }
         }
         setFormData(initialForm);
         setIsModalOpen(true);
@@ -191,6 +315,7 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
             className="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"
             value={row[field]}
             onChange={(e) => updateRowField(row.id, field, e.target.value)}
+            list={field === 'loaiThayDoi' ? 'loaiThayDoiSuggestions' : undefined}
         />
     );
 
@@ -287,6 +412,7 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
                                             onChange={handleInputChange}
                                             placeholder={placeholder}
                                             className="w-full border-gray-300 rounded border p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                                            list={field === 'loaiThayDoi' ? 'loaiThayDoiSuggestions' : undefined}
                                         />
                                     </div>
                                 ))}
@@ -306,6 +432,14 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
             <div className="mt-4 text-sm text-gray-500 italic">
                 * Lưu ý: Các mục 35, 36, 37, 39, 40 không cần nhập liệu trên form này theo yêu cầu.
             </div>
+
+            <datalist id="loaiThayDoiSuggestions">
+                <option value="Chuyển diện bố trí" />
+                <option value="Chuyển diện đối tượng" />
+                <option value="Nâng lương đúng hạn" />
+                <option value="Nâng loại, ngạch lương" />
+                <option value="Nâng bậc lương trước thời hạn" />
+            </datalist>
         </section>
     );
 }

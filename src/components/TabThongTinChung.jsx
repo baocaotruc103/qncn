@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import cccdConfig from '../../cccd.json';
 
 export default function TabThongTinChung({ initialData = {}, currentUser }) {
     const defaultHoTen = initialData?.id
@@ -6,10 +7,72 @@ export default function TabThongTinChung({ initialData = {}, currentUser }) {
         : (currentUser?.full_name || currentUser?.ho_ten || currentUser?.name || currentUser?.username || '');
 
     const noiCapCccdRef = useRef(null);
+    const ngaySinhRef = useRef(null);
+    const ngayCapCccdRef = useRef(null);
+    const hanSuDungCccdRef = useRef(null);
     const ngayChinhThucRef = useRef(null);
+
+    const parseDateInput = (value) => {
+        if (!value) return null;
+        const [year, month, day] = value.split('-').map(Number);
+        if (!year || !month || !day) return null;
+        const date = new Date(year, month - 1, day);
+        return Number.isNaN(date.getTime()) ? null : date;
+    };
+
+    const formatDateInput = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const getAgeAtDate = (birthDate, targetDate) => {
+        let age = targetDate.getFullYear() - birthDate.getFullYear();
+        const beforeBirthday =
+            targetDate.getMonth() < birthDate.getMonth() ||
+            (targetDate.getMonth() === birthDate.getMonth() && targetDate.getDate() < birthDate.getDate());
+        return beforeBirthday ? age - 1 : age;
+    };
+
+    const calculateCccdExpiryDate = (birthDateValue, issueDateValue) => {
+        const birthDate = parseDateInput(birthDateValue);
+        const issueDate = parseDateInput(issueDateValue);
+        if (!birthDate || !issueDate) return '';
+
+        const issueAge = getAgeAtDate(birthDate, issueDate);
+        const rule = cccdConfig.cccd_expiry_rules.rules.find((item) => {
+            if (typeof item.issue_age_under === 'number') {
+                return issueAge >= item.issue_age_from && issueAge < item.issue_age_under;
+            }
+            return issueAge >= item.issue_age_from;
+        });
+
+        if (!rule || rule.expiry === 'KHONG_THOI_HAN') return '';
+
+        const expiryDate = new Date(birthDate);
+        expiryDate.setFullYear(birthDate.getFullYear() + rule.expiry_age);
+        return formatDateInput(expiryDate);
+    };
+
+    const updateCccdExpiryDate = () => {
+        if (!hanSuDungCccdRef.current) return;
+        const expiryDate = calculateCccdExpiryDate(
+            ngaySinhRef.current?.value || initialData?.ngay_sinh || '',
+            ngayCapCccdRef.current?.value || initialData?.ngay_cap_cccd || ''
+        );
+        hanSuDungCccdRef.current.value = expiryDate;
+    };
+
+    useEffect(() => {
+        if (!hanSuDungCccdRef.current?.value) {
+            updateCccdExpiryDate();
+        }
+    });
 
     const handleNgayCapCccdChange = (e) => {
         const dateStr = e.target.value;
+        updateCccdExpiryDate();
         if (!dateStr || !noiCapCccdRef.current) return;
 
         const selectedDate = new Date(dateStr);
@@ -47,7 +110,7 @@ export default function TabThongTinChung({ initialData = {}, currentUser }) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">2. Ngày tháng năm sinh <span className="text-red-500">*</span></label>
-                        <input type="date" required defaultValue={initialData?.ngay_sinh || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
+                        <input type="date" required ref={ngaySinhRef} onChange={updateCccdExpiryDate} defaultValue={initialData?.ngay_sinh || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">3. Đơn vị</label>
@@ -89,7 +152,7 @@ export default function TabThongTinChung({ initialData = {}, currentUser }) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">8.1 Ngày cấp</label>
-                        <input type="date" onChange={handleNgayCapCccdChange} defaultValue={initialData?.ngay_cap_cccd || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
+                        <input type="date" ref={ngayCapCccdRef} onChange={handleNgayCapCccdChange} defaultValue={initialData?.ngay_cap_cccd || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">8.2 Nơi cấp</label>
@@ -97,7 +160,7 @@ export default function TabThongTinChung({ initialData = {}, currentUser }) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">8.3 Hạn sử dụng</label>
-                        <input type="date" defaultValue={initialData?.han_su_dung_cccd || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
+                        <input type="date" ref={hanSuDungCccdRef} defaultValue={initialData?.han_su_dung_cccd || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">9. Trình độ ngoại ngữ</label>
