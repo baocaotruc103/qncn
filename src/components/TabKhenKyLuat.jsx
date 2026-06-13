@@ -104,12 +104,14 @@ export default function TabKhenKyLuat({ initialKhenThuong = [], initialKyLuat = 
 
     const renderRow = (type, row, index, totalRows) => (
         <tr key={row.id} className="border-b bg-white hover:bg-gray-50 relative">
-            <td className="p-2 border"><input type="date" className="w-full border-gray-300 rounded text-sm p-1" value={row.ngayThangNam} onChange={(e) => updateRowField(type, row.id, 'ngayThangNam', e.target.value)} /></td>
-            <td className="p-2 border"><input type="text" className="w-full border-gray-300 rounded text-sm p-1" value={row.danhGiaXepLoai} onChange={(e) => updateRowField(type, row.id, 'danhGiaXepLoai', e.target.value)} /></td>
-            <td className="p-2 border"><input type="text" className="w-full border-gray-300 rounded text-sm p-1" value={row.lyDo} onChange={(e) => updateRowField(type, row.id, 'lyDo', e.target.value)} /></td>
-            <td className="p-2 border"><input type="text" className="w-full border-gray-300 rounded text-sm p-1" value={row.loai} onChange={(e) => updateRowField(type, row.id, 'loai', e.target.value)} /></td>
-            <td className="p-2 border"><input type="text" className="w-full border-gray-300 rounded text-sm p-1" value={row.cap} onChange={(e) => updateRowField(type, row.id, 'cap', e.target.value)} /></td>
-            <td className="p-2 border">
+            <td className="p-2 border align-top"><input type="date" className="w-full border-gray-300 rounded text-sm p-1" value={row.ngayThangNam} onChange={(e) => updateRowField(type, row.id, 'ngayThangNam', e.target.value)} /></td>
+            <td className="p-2 border align-top"><input type="text" className="w-full border-gray-300 rounded text-sm p-1" value={row.danhGiaXepLoai} onChange={(e) => updateRowField(type, row.id, 'danhGiaXepLoai', e.target.value)} /></td>
+            <td className="p-2 border align-top">
+                <textarea rows="2" className="w-full border-gray-300 rounded text-sm p-1 min-w-[200px]" value={row.lyDo} placeholder="Lý do..." onChange={(e) => updateRowField(type, row.id, 'lyDo', e.target.value)}></textarea>
+            </td>
+            <td className="p-2 border align-top"><input type="text" className="w-full border-gray-300 rounded text-sm p-1" value={row.loai} onChange={(e) => updateRowField(type, row.id, 'loai', e.target.value)} /></td>
+            <td className="p-2 border align-top"><input type="text" className="w-full border-gray-300 rounded text-sm p-1" value={row.cap} onChange={(e) => updateRowField(type, row.id, 'cap', e.target.value)} /></td>
+            <td className="p-2 border align-top">
                 {row.file_ten_goc && (
                     <div className="text-xs text-blue-600 mb-1 truncate max-w-[200px]" title={row.file_ten_goc}>
                         <i className="fas fa-paperclip mr-1"></i>Đã tải lên: {row.file_ten_goc}

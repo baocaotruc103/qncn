@@ -22,6 +22,36 @@ const emptyFormData = {
     thamNienBatDau: ''
 };
 
+const getHeSo = (loaiNgach, nhom, bac) => {
+    if (!loaiNgach || !bac) return '';
+    const loai = loaiNgach.toLowerCase();
+    const n = (nhom || '').toLowerCase();
+    const b = parseInt(bac, 10);
+    if (isNaN(b)) return '';
+
+    let key = '';
+    if (loai.includes('cao cấp')) {
+        if (n.includes('2')) key = 'QNCN_CC_N2';
+        else key = 'QNCN_CC_N1';
+    } else if (loai.includes('trung cấp')) {
+        key = 'QNCN_TC';
+    } else if (loai.includes('sơ cấp')) {
+        key = 'QNCN_SC';
+    }
+
+    const salaryTables = {
+        "QNCN_CC_N1": { 1: 3.85, 2: 4.20, 3: 4.55, 4: 4.90, 5: 5.25, 6: 5.60, 7: 5.95, 8: 6.30, 9: 6.65, 10: 7.00, 11: 7.35, 12: 7.70 },
+        "QNCN_CC_N2": { 1: 3.65, 2: 4.00, 3: 4.35, 4: 4.70, 5: 5.05, 6: 5.40, 7: 5.75, 8: 6.10, 9: 6.45, 10: 6.80, 11: 7.15, 12: 7.50 },
+        "QNCN_TC": { 1: 3.50, 2: 3.80, 3: 4.10, 4: 4.40, 5: 4.70, 6: 5.00, 7: 5.30, 8: 5.60, 9: 5.90, 10: 6.20 },
+        "QNCN_SC": { 1: 3.20, 2: 3.45, 3: 3.70, 4: 3.95, 5: 4.20, 6: 4.45, 7: 4.70, 8: 4.95, 9: 5.20, 10: 5.45 }
+    };
+
+    if (key && salaryTables[key] && salaryTables[key][b]) {
+        return salaryTables[key][b].toFixed(2);
+    }
+    return '';
+};
+
 const salaryFields = [
     ['tuThang', 'Từ tháng', 'text', 'mm/yyyy'],
     ['denThang', 'Đến tháng', 'text', 'mm/yyyy'],
@@ -77,7 +107,16 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            const nextForm = { ...prev, [name]: value };
+            if (['loaiNgach', 'nhom', 'bac'].includes(name)) {
+                const calculatedHeSo = getHeSo(nextForm.loaiNgach, nextForm.nhom, nextForm.bac);
+                if (calculatedHeSo) {
+                    nextForm.heSo = calculatedHeSo;
+                }
+            }
+            return nextForm;
+        });
     };
 
     const updateRowField = (id, field, value) => {
@@ -86,7 +125,20 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
 
     const openAddModal = () => {
         setEditingRowId(null);
-        setFormData(emptyFormData);
+        let initialForm = { ...emptyFormData };
+        if (rows.length > 0) {
+            const lastRow = rows[rows.length - 1];
+            initialForm = { ...lastRow };
+            // Xóa các trường cần nhập mới
+            initialForm.id = '';
+            initialForm.tuThang = '';
+            initialForm.denThang = '';
+            initialForm.loaiThayDoi = '';
+            // Gợi ý hệ số tự động nếu hợp lệ
+            const suggestedHeSo = getHeSo(initialForm.loaiNgach, initialForm.nhom, initialForm.bac);
+            if (suggestedHeSo) initialForm.heSo = suggestedHeSo;
+        }
+        setFormData(initialForm);
         setIsModalOpen(true);
     };
 

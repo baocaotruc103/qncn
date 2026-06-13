@@ -171,15 +171,156 @@ export default function PersonnelDetail() {
         if (isExportingForm) return;
         setIsExportingForm(true);
         const unpatch = patchHtml2Canvas();
+        let replacements = [];
+        let hiddenElements = [];
+        
         try {
             const element = pdfFormRef.current;
             if (!element) throw new Error("Không tìm thấy nội dung PDF Form.");
             
+            // 1. Chuyển input, textarea, select thành thẻ div
+            const inputs = element.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                const span = document.createElement('div');
+                let text = input.value;
+                if (input.tagName === 'SELECT') {
+                    text = input.options[input.selectedIndex]?.text || '';
+                    if (text.includes('Chọn')) text = '';
+                } else if (input.type === 'date' && text) {
+                    const parts = text.split('-');
+                    if (parts.length === 3) {
+                        text = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
+                }
+                span.textContent = text || '';
+                span.className = input.className;
+                span.style.height = 'auto';
+                span.style.minHeight = '30px';
+                span.style.wordBreak = 'break-word';
+                span.style.whiteSpace = 'pre-wrap';
+                span.style.border = 'none';
+                span.style.borderBottom = '1px dashed #94a3b8';
+                span.style.background = 'transparent';
+                span.style.padding = '4px 0';
+                span.style.display = 'block';
+                span.style.color = '#000';
+                
+                input.parentNode.insertBefore(span, input);
+                input.style.display = 'none';
+                replacements.push({ input, span });
+            });
+
+            // 2. Ẩn tất cả các nút (button)
+            const buttons = element.querySelectorAll('button');
+            buttons.forEach(btn => {
+                hiddenElements.push({ el: btn, display: btn.style.display });
+                btn.style.display = 'none';
+            });
+
+            // 3. Ẩn cột "Thao tác" và ép bảng vừa màn hình
+            const tables = element.querySelectorAll('table');
+            tables.forEach(table => {
+                table.style.width = '100%';
+                table.style.tableLayout = 'auto'; // Cho phép tự điều chỉnh chiều rộng
+                
+                // Bỏ min-width để bảng không bị tràn
+                const cells = table.querySelectorAll('th, td');
+                cells.forEach(cell => {
+                    cell.style.minWidth = '0';
+                    cell.style.whiteSpace = 'normal';
+                    cell.style.wordBreak = 'break-word';
+                });
+                
+                // Tìm cột Thao tác
+                const ths = table.querySelectorAll('th');
+                ths.forEach(th => {
+                    if (th.textContent.toLowerCase().includes('thao tác')) {
+                        const index = Array.from(th.parentNode.children).indexOf(th);
+                        hiddenElements.push({ el: th, display: th.style.display });
+                        th.style.display = 'none';
+                        
+                        const trs = table.querySelectorAll('tr');
+                        trs.forEach(tr => {
+                            const td = tr.children[index];
+                            if (td) {
+                                hiddenElements.push({ el: td, display: td.style.display });
+                                td.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            });
+
+            // 3.5 Gộp cột cho bảng Khen thưởng & Kỷ luật
+            const khenKyLuatTables = [
+                element.querySelector('#tableKhenThuong'),
+                element.querySelector('#tableKyLuat')
+            ];
+            khenKyLuatTables.forEach(table => {
+                if (!table) return;
+                const ths = table.querySelectorAll('th');
+                if (ths.length >= 5) {
+                    const thDate = ths[0];
+                    const thEval = ths[1];
+                    const thType = ths[3];
+                    const thLevel = ths[4];
+
+                    hiddenElements.push({ el: thDate, isTextContent: true, textContent: thDate.textContent });
+                    hiddenElements.push({ el: thType, isTextContent: true, textContent: thType.textContent });
+                    hiddenElements.push({ el: thEval, display: thEval.style.display });
+                    hiddenElements.push({ el: thLevel, display: thLevel.style.display });
+
+                    thDate.textContent = 'Ngày tháng năm / Đánh giá';
+                    thType.textContent = 'Loại / Cấp';
+                    thEval.style.display = 'none';
+                    thLevel.style.display = 'none';
+
+                    const trs = table.querySelectorAll('tbody tr');
+                    trs.forEach(tr => {
+                        const tds = tr.querySelectorAll('td');
+                        if (tds.length >= 5 && !tds[0].hasAttribute('colspan')) {
+                            const tdDate = tds[0];
+                            const tdEval = tds[1];
+                            const tdType = tds[3];
+                            const tdLevel = tds[4];
+
+                            hiddenElements.push({ el: tdEval, display: tdEval.style.display });
+                            hiddenElements.push({ el: tdLevel, display: tdLevel.style.display });
+
+                            const wrapper1 = document.createElement('div');
+                            wrapper1.style.marginTop = '4px';
+                            while(tdEval.firstChild) wrapper1.appendChild(tdEval.firstChild);
+                            tdDate.appendChild(wrapper1);
+                            
+                            const wrapper2 = document.createElement('div');
+                            wrapper2.style.marginTop = '4px';
+                            while(tdLevel.firstChild) wrapper2.appendChild(tdLevel.firstChild);
+                            tdType.appendChild(wrapper2);
+
+                            tdEval.style.display = 'none';
+                            tdLevel.style.display = 'none';
+
+                            hiddenElements.push({ type: 'restoreNodes', source: wrapper1, destination: tdEval });
+                            hiddenElements.push({ type: 'restoreNodes', source: wrapper2, destination: tdLevel });
+                        }
+                    });
+                }
+            });
+
+            // 4. Bỏ overflow để html2canvas không bị cắt ngang bảng
+            const scrollableDivs = element.querySelectorAll('.overflow-x-auto, .overflow-hidden, .table-container');
+            scrollableDivs.forEach(div => {
+                const oldCss = div.style.cssText;
+                hiddenElements.push({ el: div, isCssText: true, cssText: oldCss });
+                div.style.setProperty('overflow', 'visible', 'important');
+                div.style.setProperty('overflow-x', 'visible', 'important');
+            });
+
             const opt = {
-                margin: [15, 15, 15, 15], 
+                margin: [10, 10, 10, 10], 
                 filename: `Form_${data.hoSo.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}.pdf`,
-                image: { type: 'jpeg', quality: 0.8 },
-                html2canvas: { scale: 1.5, useCORS: true, windowWidth: 1000 },
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
             };
 
@@ -215,6 +356,24 @@ export default function PersonnelDetail() {
             console.error('Lỗi khi xuất PDF Form:', error);
             alert('Có lỗi xảy ra: ' + (error.message || JSON.stringify(error)));
         } finally {
+            replacements.forEach(({ input, span }) => {
+                span.remove();
+                input.style.display = '';
+            });
+            hiddenElements.forEach(item => {
+                if (item.type === 'restoreNodes') {
+                    while (item.source.firstChild) {
+                        item.destination.appendChild(item.source.firstChild);
+                    }
+                    item.source.remove();
+                } else if (item.isCssText) {
+                    item.el.style.cssText = item.cssText;
+                } else if (item.isTextContent) {
+                    item.el.textContent = item.textContent;
+                } else {
+                    item.el.style.display = item.display;
+                }
+            });
             unpatch();
             setIsExportingForm(false);
         }
@@ -729,7 +888,7 @@ export default function PersonnelDetail() {
             </div>
 
             <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
-                <div ref={pdfFormRef} id="pdf-form-content" className="bg-white p-8 pdf-form-mode" style={{ width: '210mm', minHeight: '297mm' }}>
+                <div ref={pdfFormRef} id="pdf-form-content" className="bg-white p-6 pdf-form-mode" style={{ width: '800px', minHeight: '1122px', color: '#000' }}>
                     <h1 className="text-2xl font-bold text-center mb-6 uppercase">HỒ SƠ QUÂN NHÂN</h1>
                     <div className="mb-6"><TabThongTinChung initialData={hoSo} /></div>
                     <div className="mb-6"><TabDaoTao initialData={daoTao} /></div>
