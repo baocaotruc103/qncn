@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import PersonnelList from './pages/PersonnelList';
 import PersonnelForm from './pages/PersonnelForm';
 import PersonnelDetail from './pages/PersonnelDetail';
+import UserList from './pages/UserList';
 
 function ProtectedRoute() {
   const { isAuthenticated } = useAuth();
@@ -18,6 +19,16 @@ function ProtectedRoute() {
   }
 
   return <AdminLayout />;
+}
+
+function AdminOnlyRoute({ children }) {
+  const { currentUser } = useAuth();
+  
+  if (currentUser?.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
 }
 
 function App() {
@@ -32,6 +43,8 @@ function App() {
             <Route path="personnel/new" element={<PersonnelForm />} />
             <Route path="personnel/edit/:id" element={<PersonnelForm />} />
             <Route path="personnel/view/:id" element={<PersonnelDetail />} />
+            <Route path="settings/users" element={<AdminOnlyRoute><UserList /></AdminOnlyRoute>} />
+            <Route path="users" element={<Navigate to="/settings/users" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>

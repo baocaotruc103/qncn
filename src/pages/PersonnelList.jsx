@@ -3,6 +3,15 @@ import { supabase } from '../services/supabase';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/authContextBase';
 
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+};
+
 export default function PersonnelList() {
   const [personnel, setPersonnel] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,10 +20,16 @@ export default function PersonnelList() {
   useEffect(() => {
     async function fetchPersonnel() {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('ho_so_qncn')
           .select('id, ho_ten_khai_sinh, ngay_sinh, tn_nhap_ngu, tn_tuyen_dung, don_vi')
           .order('created_at', { ascending: false });
+
+        if (currentUser?.role !== 'admin') {
+          query = query.eq('created_by', String(currentUser?.id));
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
         setPersonnel(data || []);
@@ -44,7 +59,8 @@ export default function PersonnelList() {
         )}
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -78,10 +94,10 @@ export default function PersonnelList() {
                     {index + 1}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-gray-900">{p.ho_ten_khai_sinh}</div>
+                    <div className="text-sm font-bold text-gray-900 uppercase">{p.ho_ten_khai_sinh}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {p.ngay_sinh || '-'}
+                    {formatDate(p.ngay_sinh)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {p.tn_nhap_ngu || p.tn_tuyen_dung || '-'}
@@ -104,6 +120,43 @@ export default function PersonnelList() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden block p-4 bg-gray-50 space-y-4">
+        {loading ? (
+            <div className="text-center text-gray-500 py-8">
+                <i className="fas fa-circle-notch fa-spin text-2xl mb-2 text-blue-500"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        ) : personnel.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+                <i className="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                <p>Chưa có hồ sơ quân nhân nào.</p>
+            </div>
+        ) : (
+            personnel.map((p, index) => (
+                <div key={p.id} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-lg font-bold text-blue-900 leading-tight pr-2 uppercase">{p.ho_ten_khai_sinh}</h3>
+                        <span className="text-[10px] bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-bold whitespace-nowrap">#{index + 1}</span>
+                    </div>
+                    <div className="space-y-2 text-sm text-gray-600 mb-4">
+                        <p className="flex items-center"><i className="fas fa-birthday-cake w-5 text-gray-400"></i> <span>{formatDate(p.ngay_sinh)}</span></p>
+                        <p className="flex items-center"><i className="fas fa-calendar-alt w-5 text-gray-400"></i> <span>Nhập ngũ: {p.tn_nhap_ngu || p.tn_tuyen_dung || '-'}</span></p>
+                        <p className="flex items-start"><i className="fas fa-shield-alt w-5 text-gray-400 mt-0.5"></i> <span className="line-clamp-2 leading-snug">{p.don_vi || 'Chưa cập nhật'}</span></p>
+                    </div>
+                    <div className="flex justify-end gap-2 border-t pt-3 border-gray-100 mt-2">
+                        <Link to={`/personnel/edit/${p.id}`} className="flex-1 text-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+                            <i className="fas fa-edit mr-1"></i> Sửa
+                        </Link>
+                        <Link to={`/personnel/view/${p.id}`} className="flex-1 text-center px-3 py-2 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+                            <i className="fas fa-eye mr-1"></i> Chi tiết
+                        </Link>
+                    </div>
+                </div>
+            ))
+        )}
       </div>
       
       {/* Pagination Placeholder */}

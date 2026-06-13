@@ -73,7 +73,7 @@ function PersonnelForm() {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      await processAndSaveHoSo(id);
+      await processAndSaveHoSo(id, currentUser);
       alert('Đã lưu hồ sơ thành công.');
       navigate('/personnel');
     } catch (error) {

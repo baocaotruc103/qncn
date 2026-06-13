@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import { useAuth } from '../contexts/authContextBase';
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+};
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
     total: 0,
     loading: true,
   });
+  const { currentUser } = useAuth();
   const [personnel, setPersonnel] = useState([]);
   const [personnelLoading, setPersonnelLoading] = useState(true);
   const [personnelError, setPersonnelError] = useState('');
@@ -14,14 +22,20 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
+        let statsQuery = supabase.from('ho_so_qncn').select('*', { count: 'exact', head: true });
+        let personnelQuery = supabase
+          .from('ho_so_qncn')
+          .select('id, ho_ten_khai_sinh, ngay_sinh, tn_nhap_ngu, tn_tuyen_dung, don_vi')
+          .order('created_at', { ascending: false });
+
+        if (currentUser?.role !== 'admin') {
+          statsQuery = statsQuery.eq('created_by', String(currentUser?.id));
+          personnelQuery = personnelQuery.eq('created_by', String(currentUser?.id));
+        }
+
         const [statsResult, personnelResult] = await Promise.all([
-          supabase
-            .from('ho_so_qncn')
-            .select('*', { count: 'exact', head: true }),
-          supabase
-            .from('ho_so_qncn')
-            .select('id, ho_ten_khai_sinh, ngay_sinh, tn_nhap_ngu, tn_tuyen_dung, don_vi')
-            .order('created_at', { ascending: false }),
+          statsQuery,
+          personnelQuery,
         ]);
 
         if (statsResult.error) {
@@ -108,16 +122,16 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">TT</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Họ và tên</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ngày sinh</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nhập ngũ / Tuyển dụng</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Đơn vị</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Thao tác</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">HỌ VÀ TÊN</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">NGÀY SINH</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">NHẬP NGŨ / TUYỂN DỤNG</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">ĐƠN VỊ</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">THAO TÁC</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -147,9 +161,11 @@ export default function Dashboard() {
                   <tr key={item.id} className="hover:bg-blue-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{index + 1}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900">{item.ho_ten_khai_sinh}</div>
+                      <div className="text-sm font-bold text-gray-900 uppercase">{item.ho_ten_khai_sinh}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.ngay_sinh || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(item.ngay_sinh)}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {item.tn_nhap_ngu || item.tn_tuyen_dung || '-'}
                     </td>
@@ -159,10 +175,10 @@ export default function Dashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link to={`/personnel/edit/${item.id}`} className="text-blue-600 hover:text-blue-900 mr-4">
+                      <Link to={`/personnel/edit/${item.id}`} className="text-blue-600 hover:text-blue-900 mr-4" title="Cập nhật">
                         <i className="fas fa-edit"></i> Sửa
                       </Link>
-                      <Link to={`/personnel/view/${item.id}`} className="text-green-600 hover:text-green-900">
+                      <Link to={`/personnel/view/${item.id}`} className="text-green-600 hover:text-green-900" title="Xem chi tiết">
                         <i className="fas fa-eye"></i> Xem
                       </Link>
                     </td>
@@ -171,6 +187,48 @@ export default function Dashboard() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden block p-4 bg-gray-50 space-y-4">
+          {personnelLoading ? (
+              <div className="text-center text-gray-500 py-8">
+                  <i className="fas fa-circle-notch fa-spin text-2xl mb-2 text-blue-500"></i>
+                  <p>Đang tải dữ liệu...</p>
+              </div>
+          ) : personnelError ? (
+              <div className="text-center text-red-600 py-8">
+                  <i className="fas fa-circle-exclamation text-2xl mb-2"></i>
+                  <p>{personnelError}</p>
+              </div>
+          ) : personnel.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                  <i className="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                  <p>Chưa có hồ sơ quân nhân nào.</p>
+              </div>
+          ) : (
+              personnel.map((item, index) => (
+                  <div key={item.id} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-3">
+                          <h3 className="text-lg font-bold text-blue-900 leading-tight pr-2 uppercase">{item.ho_ten_khai_sinh}</h3>
+                          <span className="text-[10px] bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-bold whitespace-nowrap">#{index + 1}</span>
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-600 mb-4">
+                          <p className="flex items-center"><i className="fas fa-birthday-cake w-5 text-gray-400"></i> <span>{formatDate(item.ngay_sinh)}</span></p>
+                          <p className="flex items-center"><i className="fas fa-calendar-alt w-5 text-gray-400"></i> <span>Nhập ngũ: {item.tn_nhap_ngu || item.tn_tuyen_dung || '-'}</span></p>
+                          <p className="flex items-start"><i className="fas fa-shield-alt w-5 text-gray-400 mt-0.5"></i> <span className="line-clamp-2 leading-snug">{item.don_vi || 'Chưa cập nhật'}</span></p>
+                      </div>
+                      <div className="flex justify-end gap-2 border-t pt-3 border-gray-100 mt-2">
+                          <Link to={`/personnel/edit/${item.id}`} className="flex-1 text-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+                              <i className="fas fa-edit mr-1"></i> Sửa
+                          </Link>
+                          <Link to={`/personnel/view/${item.id}`} className="flex-1 text-center px-3 py-2 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+                              <i className="fas fa-eye mr-1"></i> Chi tiết
+                          </Link>
+                      </div>
+                  </div>
+              ))
+          )}
         </div>
 
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">

@@ -1,13 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import html2pdf from 'html2pdf.js';
+import TabThongTinChung from '../components/TabThongTinChung';
+import TabDaoTao from '../components/TabDaoTao';
+import TabGiaDinh from '../components/TabGiaDinh';
+import TabKhenKyLuat from '../components/TabKhenKyLuat';
+import TabNhanDang from '../components/TabNhanDang';
+import TabLuong from '../components/TabLuong';
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+};
 
 export default function PersonnelDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const pdfRef = useRef(null);
+    const pdfFormRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
+    const [isExportingForm, setIsExportingForm] = useState(false);
     const [data, setData] = useState({
         hoSo: null,
         daoTao: [],
@@ -56,11 +74,49 @@ export default function PersonnelDetail() {
         }
     }, [id]);
 
+    const patchHtml2Canvas = () => {
+        const originalGetComputedStyle = window.getComputedStyle;
+        window.getComputedStyle = function(el, pseudo) {
+            const style = originalGetComputedStyle(el, pseudo);
+            return new Proxy(style, {
+                get(target, prop) {
+                    if (prop === 'getPropertyValue') {
+                        return function(name) {
+                            let val = target.getPropertyValue(name);
+                            if (val && (val.includes('oklch') || val.includes('oklab') || val.includes('color('))) {
+                                if (name.includes('background')) return 'rgb(255, 255, 255)';
+                                if (name.includes('color')) return 'rgb(0, 0, 0)';
+                                if (name.includes('border')) return 'rgb(200, 200, 200)';
+                                return 'none';
+                            }
+                            return val;
+                        };
+                    }
+                    let val = target[prop];
+                    if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab') || val.includes('color('))) {
+                        const propString = String(prop).toLowerCase();
+                        if (propString.includes('background')) return 'rgb(255, 255, 255)';
+                        if (propString.includes('color')) return 'rgb(0, 0, 0)';
+                        if (propString.includes('border')) return 'rgb(200, 200, 200)';
+                        return 'none';
+                    }
+                    if (typeof val === 'function') {
+                        return val.bind(target);
+                    }
+                    return val;
+                }
+            });
+        };
+        return () => { window.getComputedStyle = originalGetComputedStyle; };
+    };
+
     const handleExportPDF = async () => {
         if (isExporting) return;
         setIsExporting(true);
+        const unpatch = patchHtml2Canvas();
         try {
-            const element = document.getElementById('pdf-content');
+            const element = pdfRef.current;
+            if (!element) throw new Error("Không tìm thấy nội dung PDF.");
             
             // html2pdf margin: [top, left, bottom, right] -> top 20, left 20, bottom 20, right 15
             const opt = {
@@ -86,24 +142,81 @@ export default function PersonnelDetail() {
                     upsert: false
                 });
                 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.warn('Lỗi khi upload lên Supabase:', uploadError);
+                alert(`Không thể lưu vào bucket file_qncn do lỗi phân quyền RLS: ${uploadError.message}. File PDF vẫn sẽ được tải về máy của bạn.`);
+            }
 
-            // Tự động kích hoạt tải file về máy
-            const { data: { publicUrl } } = supabase.storage.from('file_qncn').getPublicUrl(filePath);
-            
+            // Tự động kích hoạt tải file về máy từ blob
+            const blobUrl = URL.createObjectURL(pdfBlob);
             const link = document.createElement('a');
-            link.href = publicUrl;
+            link.href = blobUrl;
             link.download = fileName; // Bắt buộc tên file tải về
             link.target = '_blank';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
             
         } catch (error) {
             console.error('Lỗi khi xuất PDF:', error);
             alert('Có lỗi xảy ra: ' + (error.message || JSON.stringify(error)));
         } finally {
+            unpatch();
             setIsExporting(false);
+        }
+    };
+
+    const handleExportPDFForm = async () => {
+        if (isExportingForm) return;
+        setIsExportingForm(true);
+        const unpatch = patchHtml2Canvas();
+        try {
+            const element = pdfFormRef.current;
+            if (!element) throw new Error("Không tìm thấy nội dung PDF Form.");
+            
+            const opt = {
+                margin: [15, 15, 15, 15], 
+                filename: `Form_${data.hoSo.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}.pdf`,
+                image: { type: 'jpeg', quality: 0.8 },
+                html2canvas: { scale: 1.5, useCORS: true, windowWidth: 1000 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+            };
+
+            const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+            
+            const fileName = `Form_${data.hoSo.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}_${Date.now()}.pdf`;
+            const filePath = `${id}/pdf/${fileName}`;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('file_qncn')
+                .upload(filePath, pdfBlob, {
+                    contentType: 'application/pdf',
+                    cacheControl: '3600',
+                    upsert: false
+                });
+                
+            if (uploadError) {
+                console.warn('Lỗi khi upload lên Supabase:', uploadError);
+                alert(`Không thể lưu vào bucket file_qncn do lỗi phân quyền RLS: ${uploadError.message}. File PDF Form vẫn sẽ được tải về máy của bạn.`);
+            }
+
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+            
+        } catch (error) {
+            console.error('Lỗi khi xuất PDF Form:', error);
+            alert('Có lỗi xảy ra: ' + (error.message || JSON.stringify(error)));
+        } finally {
+            unpatch();
+            setIsExportingForm(false);
         }
     };
 
@@ -143,6 +256,36 @@ export default function PersonnelDetail() {
                     content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #e2e8f0;
                 }
 
+                .pdf-form-mode button, 
+                .pdf-form-mode a, 
+                .pdf-form-mode .fa-trash, 
+                .pdf-form-mode .fa-plus {
+                    display: none !important;
+                }
+                .pdf-form-mode input, 
+                .pdf-form-mode select, 
+                .pdf-form-mode textarea {
+                    border: none !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                    -webkit-appearance: none !important;
+                    -moz-appearance: none !important;
+                    appearance: none !important;
+                    pointer-events: none !important;
+                    color: black !important;
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
+                    border-bottom: 1px dashed #9ca3af !important;
+                    border-radius: 0 !important;
+                }
+                .pdf-form-mode {
+                    color: black !important;
+                }
+                .pdf-form-mode label {
+                    color: black !important;
+                    font-weight: 600;
+                }
+
                 @media print {
                     @page { margin: 2cm 1.5cm 2cm 2cm; size: A4; }
                     body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -166,41 +309,32 @@ export default function PersonnelDetail() {
 
             <div className="max-w-6xl mx-auto">
                 
-                <div className="flex justify-between items-center mb-6 no-print">
-                    <button onClick={() => navigate(-1)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm font-medium transition-colors flex items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6 no-print">
+                    <button onClick={() => navigate(-1)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 shadow-sm font-medium transition-colors flex items-center justify-center sm:justify-start">
                         <i className="fas fa-arrow-left mr-2 text-gray-500"></i> Quay lại
                     </button>
-                    <div className="flex gap-3">
-                        <button onClick={() => navigate(`/personnel/edit/${id}`)} className="px-5 py-2 bg-yellow-500 rounded-lg text-white hover:bg-yellow-600 shadow-md font-medium transition-colors flex items-center">
-                            <i className="fas fa-edit mr-2"></i> Sửa hồ sơ
+                    <div className="flex gap-2 sm:gap-3">
+                        <button onClick={() => navigate(`/personnel/edit/${id}`)} className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 bg-yellow-500 rounded-lg text-white hover:bg-yellow-600 shadow-md font-medium transition-colors flex items-center text-sm sm:text-base">
+                            <i className="fas fa-edit mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Sửa hồ sơ</span><span className="sm:hidden">Sửa hồ sơ</span>
                         </button>
-                        <button onClick={handleExportPDF} disabled={isExporting} className={`px-5 py-2 rounded-lg text-white shadow-md font-medium transition-colors flex items-center ${isExporting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-800 hover:bg-blue-900'}`}>
-                            {isExporting ? <><i className="fas fa-spinner fa-spin mr-2"></i> Đang nén & lưu PDF...</> : <><i className="fas fa-file-pdf mr-2"></i> Xuất PDF</>}
+                        <button onClick={handleExportPDFForm} disabled={isExportingForm} className={`flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 rounded-lg text-white shadow-md font-medium transition-colors flex items-center text-sm sm:text-base ${isExportingForm ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
+                            {isExportingForm ? <><i className="fas fa-spinner fa-spin mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Đang xuất PDF Form...</span><span className="sm:hidden">Đang xuất</span></> : <><i className="fas fa-file-invoice mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Xuất PDF Form</span><span className="sm:hidden">Xuất Form</span></>}
+                        </button>
+                        <button onClick={handleExportPDF} disabled={isExporting} className={`flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 rounded-lg text-white shadow-md font-medium transition-colors flex items-center text-sm sm:text-base ${isExporting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-800 hover:bg-blue-900'}`}>
+                            {isExporting ? <><i className="fas fa-spinner fa-spin mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Đang xuất PDF...</span><span className="sm:hidden">Đang xuất</span></> : <><i className="fas fa-file-pdf mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Xuất PDF</span><span className="sm:hidden">Xuất PDF</span></>}
                         </button>
                     </div>
                 </div>
 
-                <div id="pdf-content" className="bg-white rounded-2xl shadow-lg print-border overflow-hidden">
+                <div ref={pdfRef} id="pdf-content" className="bg-white rounded-2xl shadow-lg print-border overflow-hidden">
                     
-                    <div className="bg-gradient-to-r from-blue-900 to-blue-700 p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center sm:items-start gap-5 relative overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-900 to-blue-700 py-6 sm:py-8 text-white text-center relative overflow-hidden">
                         <div className="absolute top-0 right-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
                             <i className="fas fa-shield-alt" style={{ fontSize: '12rem' }}></i>
                         </div>
-                        
-                        <div className="w-24 h-24 bg-white/20 rounded-full border-4 border-white/30 flex items-center justify-center shrink-0 z-10 backdrop-blur-sm">
-                            <i className="fas fa-user-tie text-4xl text-white"></i>
-                        </div>
-                        
-                        <div className="flex-1 text-center sm:text-left z-10">
-                            <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-wide mb-1.5">{hoSo.ho_ten_khai_sinh}</h1>
-                            <p className="text-blue-200 text-base font-medium mb-3 uppercase">{hoSo.nganh_nghe_cao_nhat || 'Chưa cập nhật'} • <span className="text-white">{hoSo.don_vi || 'Đơn vị'}</span></p>
-                            
-                            <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm mt-2 text-blue-100">
-                                <div className="flex items-center bg-black/20 px-3 py-1.5 rounded-full"><i className="fas fa-id-card mr-2"></i>CMQNCN: {hoSo.so_cmqncn_cmsq || 'Chưa có'}</div>
-                                <div className="flex items-center bg-black/20 px-3 py-1.5 rounded-full"><i className="fas fa-users mr-2"></i>Khối: {hoSo.khoi_quan || 'Chưa cập nhật'}</div>
-                                <div className="flex items-center bg-black/20 px-3 py-1.5 rounded-full"><i className="fas fa-calendar-alt mr-2"></i>Nhập ngũ: {hoSo.tn_nhap_ngu || hoSo.tn_tuyen_dung || 'Chưa rõ'}</div>
-                            </div>
-                        </div>
+                        <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-widest relative z-10 text-white drop-shadow-md">
+                            HỒ SƠ QUÂN NHÂN
+                        </h1>
                     </div>
 
                     <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -213,8 +347,20 @@ export default function PersonnelDetail() {
                                 </h2>
                                 <ul className="space-y-3 text-sm text-gray-600">
                                     <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Họ và tên khai sinh</span>
+                                        <span className="text-gray-900 font-bold text-base uppercase">{hoSo.ho_ten_khai_sinh || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Chức vụ / Đơn vị</span>
+                                        <span className="text-gray-900 font-medium text-right ml-4">{hoSo.nganh_nghe_cao_nhat || '-'} - {hoSo.don_vi || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Tên thường dùng</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.ho_ten_thuong_dung || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
                                         <span className="font-medium text-gray-500">Ngày sinh</span>
-                                        <span className="text-gray-900 font-medium">{hoSo.ngay_sinh || '-'}</span>
+                                        <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_sinh)}</span>
                                     </li>
                                     <li className="flex justify-between border-b border-gray-50 pb-2">
                                         <span className="font-medium text-gray-500">Giới tính</span>
@@ -245,6 +391,14 @@ export default function PersonnelDetail() {
                                         <p className="text-gray-900 font-medium">{hoSo.que_quan || '-'}</p>
                                     </div>
                                     <div className="pt-2 border-t border-gray-100">
+                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-id-card mr-1 opacity-50"></i> Nơi thường trú</p>
+                                        <p className="text-gray-900 font-medium">{hoSo.noi_thuong_tru_chi_tiet ? `${hoSo.noi_thuong_tru_chi_tiet}, ` : ''}{hoSo.noi_thuong_tru || '-'}</p>
+                                    </div>
+                                    <div className="pt-2 border-t border-gray-100">
+                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-building mr-1 opacity-50"></i> Nơi tạm trú</p>
+                                        <p className="text-gray-900 font-medium">{hoSo.noi_tam_tru_chi_tiet ? `${hoSo.noi_tam_tru_chi_tiet}, ` : ''}{hoSo.noi_tam_tru || '-'}</p>
+                                    </div>
+                                    <div className="pt-2 border-t border-gray-100">
                                         <p className="font-medium text-gray-500 mb-1"><i className="fas fa-map-pin mr-1 opacity-50"></i> Nơi ở hiện tại</p>
                                         <p className="text-gray-900 font-medium">{hoSo.noi_o_hien_tai_chi_tiet ? `${hoSo.noi_o_hien_tai_chi_tiet}, ` : ''}{hoSo.noi_o_hien_tai || '-'}</p>
                                     </div>
@@ -255,14 +409,22 @@ export default function PersonnelDetail() {
                                 <h2 className="text-lg font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-4 flex items-center">
                                     <span className="bg-blue-100 text-blue-700 p-2 rounded-lg mr-3"><i className="fas fa-id-badge w-4 h-4 flex items-center justify-center"></i></span> Giấy tờ tùy thân
                                 </h2>
-                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm">
+                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm mb-4">
                                     <p className="font-semibold text-gray-800 mb-1">Căn cước công dân</p>
-                                    <p className="text-xl font-bold text-blue-800 tracking-wider mb-2">{hoSo.so_cccd || 'Chưa cập nhật'}</p>
-                                    <div className="flex justify-between text-xs text-gray-500 mt-2">
-                                        <span>Cấp: {hoSo.ngay_cap_cccd || '-'}</span>
-                                        <span>Hết hạn: {hoSo.han_su_dung_cccd || '-'}</span>
+                                    <p className="text-xl font-bold text-blue-800 tracking-wider mb-2">{hoSo.so_cccd || '...'}</p>
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-2">
+                                        <div>Cấp: <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_cap_cccd)}</span></div>
+                                        <div>Hết hạn: <span className="text-gray-900 font-medium">{formatDate(hoSo.han_su_dung_cccd)}</span></div>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-1">Nơi cấp: {hoSo.noi_cap_cccd || '-'}</p>
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm">
+                                    <p className="font-semibold text-gray-800 mb-1">CMQNCN / CMSQ</p>
+                                    <p className="text-xl font-bold text-green-700 tracking-wider mb-2">{hoSo.so_cmqncn_cmsq || '...'}</p>
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-2">
+                                        <div>Cấp: <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_cap_cmqncn_cmsq)}</span></div>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Nơi cấp: {hoSo.noi_cap_cmqncn_cmsq || '-'}</p>
                                 </div>
                             </div>
 
@@ -278,6 +440,18 @@ export default function PersonnelDetail() {
                                     <li className="flex justify-between border-b border-gray-50 pb-2">
                                         <span className="font-medium text-gray-500">Chiều cao</span>
                                         <span className="text-gray-900 font-medium">{hoSo.chieu_cao_m ? `${hoSo.chieu_cao_m} m` : '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Sống mũi</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.song_mui || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Nếp tai dưới</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.nep_tai_duoi || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Dái tai</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.dai_tai || '-'}</span>
                                     </li>
                                     <li className="flex justify-between border-b border-gray-50 pb-2">
                                         <span className="font-medium text-gray-500">Dấu vết riêng</span>
@@ -299,36 +473,31 @@ export default function PersonnelDetail() {
                                     <i className="fas fa-flag text-blue-600 mr-2"></i> Trục thời gian Đảng / Đoàn
                                 </h2>
                                 <div className="relative pl-6 border-l-2 border-blue-200 space-y-6">
-                                    {(hoSo.tn_tuyen_dung || hoSo.tn_nhap_ngu) && (
-                                        <div className="relative">
-                                            <div className="absolute -left-8 bg-blue-600 h-4 w-4 rounded-full border-4 border-white shadow"></div>
-                                            <h3 className="font-bold text-gray-800">Tuyển dụng / Nhập ngũ</h3>
-                                            <p className="text-sm text-gray-500">
-                                                {hoSo.tn_tuyen_dung ? `Tuyển dụng: ${hoSo.tn_tuyen_dung}` : ''}
-                                                {hoSo.tn_tuyen_dung && hoSo.tn_nhap_ngu ? ' | ' : ''}
-                                                {hoSo.tn_nhap_ngu ? `Nhập ngũ: ${hoSo.tn_nhap_ngu}` : ''}
-                                            </p>
+                                    <div className="relative">
+                                        <div className="absolute -left-8 bg-blue-600 h-4 w-4 rounded-full border-4 border-white shadow"></div>
+                                        <h3 className="font-bold text-gray-800 mb-1">Cột mốc Quân đội</h3>
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-1">
+                                            <div>Tuyển dụng: <span className="text-gray-900 font-medium">{hoSo.tn_tuyen_dung || '-'}</span></div>
+                                            <div>Nhập ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_nhap_ngu || '-'}</span></div>
                                         </div>
-                                    )}
-                                    {hoSo.ngay_vao_doan && (
-                                        <div className="relative">
-                                            <div className="absolute -left-8 bg-blue-400 h-4 w-4 rounded-full border-4 border-white shadow"></div>
-                                            <h3 className="font-bold text-gray-800">Kết nạp Đoàn TNCS HCM</h3>
-                                            <p className="text-sm text-gray-500">Ngày {hoSo.ngay_vao_doan}</p>
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500">
+                                            <div>Xuất ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_xuat_ngu || '-'}</span></div>
+                                            <div>Tái ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_tai_ngu || '-'}</span></div>
                                         </div>
-                                    )}
-                                    {(hoSo.ngay_vao_dang || hoSo.ngay_chinh_thuc_dang) && (
-                                        <div className="relative">
-                                            <div className="absolute -left-8 bg-red-500 h-4 w-4 rounded-full border-4 border-white shadow"></div>
-                                            <h3 className="font-bold text-gray-800">Kết nạp Đảng CSVN</h3>
-                                            <p className="text-sm text-gray-500">
-                                                Dự bị: {hoSo.ngay_vao_dang || '-'} <span className="mx-2">|</span> Chính thức: {hoSo.ngay_chinh_thuc_dang || '-'}
-                                            </p>
+                                    </div>
+                                    <div className="relative">
+                                        <div className="absolute -left-8 bg-blue-400 h-4 w-4 rounded-full border-4 border-white shadow"></div>
+                                        <h3 className="font-bold text-gray-800 mb-1">Kết nạp Đoàn TNCS HCM</h3>
+                                        <p className="text-sm text-gray-500">Ngày <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_vao_doan)}</span></p>
+                                    </div>
+                                    <div className="relative">
+                                        <div className="absolute -left-8 bg-red-500 h-4 w-4 rounded-full border-4 border-white shadow"></div>
+                                        <h3 className="font-bold text-gray-800 mb-1">Kết nạp Đảng CSVN</h3>
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500">
+                                            <div>Dự bị: <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_vao_dang)}</span></div>
+                                            <div>Chính thức: <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_chinh_thuc_dang)}</span></div>
                                         </div>
-                                    )}
-                                    {(!hoSo.tn_tuyen_dung && !hoSo.tn_nhap_ngu && !hoSo.ngay_vao_doan && !hoSo.ngay_vao_dang && !hoSo.ngay_chinh_thuc_dang) && (
-                                        <p className="text-sm text-gray-500 italic">Chưa có thông tin.</p>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -398,14 +567,19 @@ export default function PersonnelDetail() {
 
                                 {khenThuong.length > 0 ? (
                                     <div className="relative pl-6 border-l-2 border-green-200 space-y-4">
-                                        {khenThuong.map((kt) => (
-                                            <div key={kt.id} className="relative">
-                                                <div className="absolute -left-[29px] bg-white text-green-500 h-6 w-6 rounded-full border-2 border-green-200 flex items-center justify-center"><i className="fas fa-trophy text-xs"></i></div>
-                                                <h3 className="font-bold text-gray-800">{kt.danh_gia_xep_loai || 'Khen thưởng'} - {kt.cap || ''}</h3>
-                                                <p className="text-xs text-gray-500 font-medium mb-1">{kt.ngay || ''}</p>
-                                                <p className="text-sm text-gray-700">{kt.ly_do || ''}</p>
-                                            </div>
-                                        ))}
+                                        {khenThuong.map((kt) => {
+                                            const formattedDate = formatDate(kt.ngay);
+                                            const subTitle = [formattedDate !== '-' ? formattedDate : '', kt.danh_gia_xep_loai].filter(Boolean).join(' • ');
+                                            
+                                            return (
+                                                <div key={kt.id} className="relative">
+                                                    <div className="absolute -left-[29px] bg-white text-green-500 h-6 w-6 rounded-full border-2 border-green-200 flex items-center justify-center"><i className="fas fa-trophy text-xs"></i></div>
+                                                    <h3 className="font-bold text-gray-800">{[kt.loai, kt.cap].filter(Boolean).join(' - ') || 'Khen thưởng'}</h3>
+                                                    <p className="text-xs text-gray-500 font-medium mb-1">{subTitle}</p>
+                                                    <p className="text-sm text-gray-700">{kt.ly_do || ''}</p>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 ) : (
                                     <p className="text-sm text-gray-500 italic"><i className="fas fa-info-circle text-gray-400 mr-1"></i> Chưa có bản ghi khen thưởng.</p>
@@ -414,14 +588,19 @@ export default function PersonnelDetail() {
                                 <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
                                     {kyLuat.length > 0 ? (
                                         <div className="relative pl-6 border-l-2 border-red-200 space-y-4">
-                                            {kyLuat.map((kl) => (
-                                                <div key={kl.id} className="relative">
-                                                    <div className="absolute -left-[29px] bg-white text-red-500 h-6 w-6 rounded-full border-2 border-red-200 flex items-center justify-center"><i className="fas fa-exclamation-triangle text-xs"></i></div>
-                                                    <h3 className="font-bold text-gray-800">{kl.danh_gia_xep_loai || 'Kỷ luật'} - {kl.cap || ''}</h3>
-                                                    <p className="text-xs text-gray-500 font-medium mb-1">{kl.ngay || ''}</p>
-                                                    <p className="text-sm text-gray-700">{kl.ly_do || ''}</p>
-                                                </div>
-                                            ))}
+                                            {kyLuat.map((kl) => {
+                                                const formattedDate = formatDate(kl.ngay);
+                                                const subTitle = [formattedDate !== '-' ? formattedDate : '', kl.danh_gia_xep_loai].filter(Boolean).join(' • ');
+                                                
+                                                return (
+                                                    <div key={kl.id} className="relative">
+                                                        <div className="absolute -left-[29px] bg-white text-red-500 h-6 w-6 rounded-full border-2 border-red-200 flex items-center justify-center"><i className="fas fa-exclamation-triangle text-xs"></i></div>
+                                                        <h3 className="font-bold text-gray-800">{[kl.loai, kl.cap].filter(Boolean).join(' - ') || 'Kỷ luật'}</h3>
+                                                        <p className="text-xs text-gray-500 font-medium mb-1">{subTitle}</p>
+                                                        <p className="text-sm text-gray-700">{kl.ly_do || ''}</p>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     ) : (
                                         <p className="text-sm text-gray-500 italic"><i className="fas fa-check-circle text-green-500 mr-1"></i> Không có bản ghi kỷ luật.</p>
@@ -444,8 +623,20 @@ export default function PersonnelDetail() {
                                                         <h4 className={`font-bold text-gray-800 text-sm ${isDead ? 'line-through' : ''}`}>{gd.ho_ten || '-'}</h4>
                                                         <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${gd.moi_quan_he === 'Vợ (chồng)' ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-600'}`}>{gd.moi_quan_he || '-'}</span>
                                                     </div>
-                                                    <p className="text-xs text-gray-500 mb-1">Sinh: {gd.nam_sinh || '-'} • {gd.nghe_nghiep || '-'} • <span className={isDead ? 'text-red-500 font-medium' : 'text-green-600 font-medium'}>{isDead ? `Đã mất (${gd.nam_chet || ''})` : 'Còn sống'}</span></p>
-                                                    {gd.so_dien_thoai && <p className="text-xs text-gray-600"><i className="fas fa-phone mr-1 opacity-50"></i>{gd.so_dien_thoai}</p>}
+                                                    <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 mb-1">
+                                                        <div>Sinh: <span className="text-gray-900 font-medium">{gd.nam_sinh || '-'}</span></div>
+                                                        <div className="text-gray-900 font-medium">{gd.nghe_nghiep || '-'}</div>
+                                                        <div className={isDead ? 'text-red-500 font-medium' : 'text-green-600 font-medium'}>
+                                                            {isDead ? `Đã mất (${gd.nam_chet || ''})` : 'Còn sống'}
+                                                        </div>
+                                                    </div>
+                                                    {gd.so_dien_thoai && <p className="text-xs text-gray-600 mb-1"><i className="fas fa-phone mr-1 opacity-50"></i>{gd.so_dien_thoai}</p>}
+                                                    {(gd.noi_o_chi_tiet || gd.noi_o_hien_tai) && (
+                                                        <p className="text-xs text-gray-600">
+                                                            <i className="fas fa-home mr-1 opacity-50"></i>
+                                                            {[gd.noi_o_chi_tiet, gd.noi_o_hien_tai].filter(Boolean).join(', ')}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             );
                                         })}
@@ -525,7 +716,7 @@ export default function PersonnelDetail() {
                         <div>
                             <p className="font-bold text-sm uppercase">Người khai</p>
                             <p className="italic text-xs text-gray-500 mb-20">(Ký, ghi rõ họ tên)</p>
-                            <p className="font-bold">{hoSo.ho_ten_khai_sinh}</p>
+                            <p className="font-bold uppercase">{hoSo.ho_ten_khai_sinh}</p>
                         </div>
                         <div>
                             <p className="italic text-xs text-gray-500 mb-1">Ngày ..... tháng ..... năm 20.....</p>
@@ -535,6 +726,18 @@ export default function PersonnelDetail() {
                     </div>
                 </div>
 
+            </div>
+
+            <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+                <div ref={pdfFormRef} id="pdf-form-content" className="bg-white p-8 pdf-form-mode" style={{ width: '210mm', minHeight: '297mm' }}>
+                    <h1 className="text-2xl font-bold text-center mb-6 uppercase">HỒ SƠ QUÂN NHÂN</h1>
+                    <div className="mb-6"><TabThongTinChung initialData={hoSo} /></div>
+                    <div className="mb-6"><TabDaoTao initialData={daoTao} /></div>
+                    <div className="mb-6"><TabGiaDinh initialData={giaDinh} /></div>
+                    <div className="mb-6"><TabKhenKyLuat initialKhenThuong={khenThuong} initialKyLuat={kyLuat} /></div>
+                    <div className="mb-6"><TabNhanDang initialData={hoSo} /></div>
+                    <div className="mb-6"><TabLuong initialData={luong} /></div>
+                </div>
             </div>
         </div>
     );

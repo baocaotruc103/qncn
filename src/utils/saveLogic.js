@@ -268,7 +268,7 @@ async function insertRows(tableName, rows) {
     if (error) throw error;
 }
 
-export async function processAndSaveHoSo(existingId = null) {
+export async function processAndSaveHoSo(existingId = null, currentUser = null) {
     const isUpdate = !!existingId;
     const hoSoId = existingId || crypto.randomUUID();
     const hoSo = collectHoSoPayload(hoSoId);
@@ -287,6 +287,9 @@ export async function processAndSaveHoSo(existingId = null) {
         await supabase.from('ky_luat').delete().eq('ho_so_id', hoSoId);
         await supabase.from('luong_qua_trinh').delete().eq('ho_so_id', hoSoId);
     } else {
+        if (currentUser && currentUser.id) {
+            hoSo.created_by = currentUser.id.toString();
+        }
         const { error: hoSoError } = await supabase.from('ho_so_qncn').insert(hoSo);
         if (hoSoError) throw hoSoError;
     }

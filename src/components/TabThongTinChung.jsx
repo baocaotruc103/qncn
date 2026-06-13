@@ -1,9 +1,40 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 export default function TabThongTinChung({ initialData = {}, currentUser }) {
     const defaultHoTen = initialData?.id
         ? initialData.ho_ten_khai_sinh 
         : (currentUser?.full_name || currentUser?.ho_ten || currentUser?.name || currentUser?.username || '');
+
+    const noiCapCccdRef = useRef(null);
+    const ngayChinhThucRef = useRef(null);
+
+    const handleNgayCapCccdChange = (e) => {
+        const dateStr = e.target.value;
+        if (!dateStr || !noiCapCccdRef.current) return;
+
+        const selectedDate = new Date(dateStr);
+        const cutoffDate = new Date('2024-06-30');
+        
+        if (selectedDate <= cutoffDate) {
+            noiCapCccdRef.current.value = "Cục CSQLHC về TTXH";
+        } else {
+            noiCapCccdRef.current.value = "Bộ Công an";
+        }
+    };
+
+    const handleNgayVaoDangChange = (e) => {
+        const dateStr = e.target.value;
+        if (!dateStr || !ngayChinhThucRef.current) return;
+
+        const dateObj = new Date(dateStr);
+        dateObj.setFullYear(dateObj.getFullYear() + 1);
+        
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        
+        ngayChinhThucRef.current.value = `${year}-${month}-${day}`;
+    };
 
     return (
         <section id="tab1" className="tab-pane block">
@@ -58,11 +89,11 @@ export default function TabThongTinChung({ initialData = {}, currentUser }) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">8.1 Ngày cấp</label>
-                        <input type="date" defaultValue={initialData?.ngay_cap_cccd || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
+                        <input type="date" onChange={handleNgayCapCccdChange} defaultValue={initialData?.ngay_cap_cccd || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">8.2 Nơi cấp</label>
-                        <input type="text" defaultValue={initialData?.noi_cap_cccd || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
+                        <input type="text" ref={noiCapCccdRef} defaultValue={initialData?.noi_cap_cccd || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">8.3 Hạn sử dụng</label>
@@ -136,11 +167,11 @@ export default function TabThongTinChung({ initialData = {}, currentUser }) {
                     </div>
                     <div>
                         <label className="block text-sm text-gray-700 font-medium">27. Ngày vào Đảng</label>
-                        <input type="date" defaultValue={initialData?.ngay_vao_dang || ''} className="mt-1 block w-full rounded border p-2 text-sm" />
+                        <input type="date" onChange={handleNgayVaoDangChange} defaultValue={initialData?.ngay_vao_dang || ''} className="mt-1 block w-full rounded border p-2 text-sm" />
                     </div>
                     <div className="sm:col-span-2 md:col-span-2">
                         <label className="block text-sm text-gray-700 font-medium">Ngày chính thức <em className="text-xs text-gray-500 font-normal block mt-0.5 italic">(vào Đảng CSVN)</em></label>
-                        <input type="date" defaultValue={initialData?.ngay_chinh_thuc_dang || ''} className="mt-1 block w-full rounded border p-2 text-sm" />
+                        <input type="date" ref={ngayChinhThucRef} defaultValue={initialData?.ngay_chinh_thuc_dang || ''} className="mt-1 block w-full rounded border p-2 text-sm" />
                     </div>
                 </div>
             
