@@ -64,9 +64,11 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold text-gray-800">Tổng quan hệ thống</h2>
-        <Link to="/personnel/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow inline-flex items-center justify-center transition-colors">
-          <i className="fas fa-plus mr-2"></i> Thêm hồ sơ
-        </Link>
+        {(currentUser?.role === 'admin' || stats.total === 0) && (
+          <Link to="/personnel/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow inline-flex items-center justify-center transition-colors">
+            <i className="fas fa-plus mr-2"></i> Thêm hồ sơ
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

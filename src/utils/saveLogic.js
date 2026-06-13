@@ -277,6 +277,17 @@ export async function processAndSaveHoSo(existingId = null, currentUser = null) 
         throw new Error('Vui lòng nhập Họ tên khai sinh và Ngày tháng năm sinh.');
     }
 
+    const hoTen = hoSo.ho_ten_khai_sinh.trim();
+    let nameQuery = supabase.from('ho_so_qncn').select('id').ilike('ho_ten_khai_sinh', hoTen);
+    if (isUpdate) {
+        nameQuery = nameQuery.neq('id', hoSoId);
+    }
+    const { data: existingName, error: nameError } = await nameQuery.limit(1);
+    if (nameError) throw nameError;
+    if (existingName && existingName.length > 0) {
+        throw new Error(`Họ và tên "${hoTen}" đã tồn tại trong hệ thống. Tên phải là duy nhất.`);
+    }
+
     if (isUpdate) {
         const { error: hoSoError } = await supabase.from('ho_so_qncn').update(hoSo).eq('id', hoSoId);
         if (hoSoError) throw hoSoError;

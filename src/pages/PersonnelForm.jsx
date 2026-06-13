@@ -68,6 +68,115 @@ function PersonnelForm() {
     fetchData();
   }, [id]);
 
+  useEffect(() => {
+    const handleInput = (e) => {
+        const target = e.target;
+        if (target.tagName === 'INPUT' && (target.placeholder === 'mm/yyyy' || target.hasAttribute('data-month-year'))) {
+            const oldVal = target.dataset.prevVal || '';
+            const newVal = target.value;
+            
+            if (newVal.length > oldVal.length) {
+                let formatted = newVal;
+                let raw = newVal.replace(/[^\d/]/g, '');
+                
+                // Dán 5 số (ví dụ: 22026) -> 022026
+                if (/^\d{5}$/.test(raw) && (newVal.length - oldVal.length > 1)) {
+                    raw = '0' + raw;
+                }
+
+                if (raw.includes('/')) {
+                    let parts = raw.split('/');
+                    let month = parts[0];
+                    let year = parts[1];
+                    
+                    // Người dùng tự gõ '/' sau 1 số (ví dụ: 2/2026)
+                    if (month.length === 1 && year.length > 0) {
+                        month = '0' + month;
+                    }
+                    
+                    if (month.length === 2) {
+                        if (parseInt(month, 10) > 12) month = '12';
+                        if (month === '00') month = '01';
+                    }
+                    
+                    formatted = month + '/' + year.substring(0, 4);
+                } else {
+                    let cleaned = raw.replace(/\D/g, '');
+                    if (cleaned.length >= 2) {
+                        let month = cleaned.substring(0, 2);
+                        if (parseInt(month, 10) > 12) month = '12';
+                        if (month === '00') month = '01';
+                        
+                        formatted = month + '/' + cleaned.substring(2, 6);
+                    } else {
+                        formatted = cleaned;
+                    }
+                }
+                
+                if (formatted !== newVal) {
+                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                    if (nativeInputValueSetter) {
+                        nativeInputValueSetter.call(target, formatted);
+                        target.dispatchEvent(new Event('input', { bubbles: true }));
+                        return; 
+                    }
+                }
+            }
+            target.dataset.prevVal = target.value;
+        }
+    };
+
+    const handleBlur = (e) => {
+        const target = e.target;
+        if (target.tagName === 'INPUT' && (target.placeholder === 'mm/yyyy' || target.hasAttribute('data-month-year'))) {
+            let newVal = target.value;
+            let raw = newVal.replace(/[^\d/]/g, '');
+            let formatted = newVal;
+
+            // Nếu nhập tay cố tình 5 số (22026)
+            if (/^\d{5}$/.test(raw)) {
+                raw = '0' + raw;
+            }
+
+            if (raw.includes('/')) {
+                let parts = raw.split('/');
+                let month = parts[0];
+                let year = parts[1];
+                if (month.length === 1) month = '0' + month;
+                if (month.length === 2) {
+                    if (parseInt(month, 10) > 12) month = '12';
+                    if (month === '00') month = '01';
+                }
+                if (year.length > 0) {
+                    formatted = month + '/' + year.substring(0, 4);
+                } else if (month) {
+                    formatted = month + '/';
+                }
+            } else if (raw.length >= 2) {
+                let month = raw.substring(0, 2);
+                if (parseInt(month, 10) > 12) month = '12';
+                if (month === '00') month = '01';
+                formatted = month + '/' + raw.substring(2, 6);
+            }
+
+            if (formatted !== newVal) {
+                const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                if (nativeInputValueSetter) {
+                    nativeInputValueSetter.call(target, formatted);
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        }
+    };
+    
+    document.addEventListener('input', handleInput, true);
+    document.addEventListener('blur', handleBlur, true);
+    return () => {
+        document.removeEventListener('input', handleInput, true);
+        document.removeEventListener('blur', handleBlur, true);
+    };
+  }, []);
+
   const handleSave = async (e) => {
     e.preventDefault();
     if (isSaving) return;
@@ -178,6 +287,25 @@ function PersonnelForm() {
           )}
         </div>
       </form>
+
+      {/* Nút Lưu nổi trên Mobile */}
+      <div className="md:hidden fixed bottom-6 right-6 z-50">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving}
+          className={`flex items-center justify-center px-6 py-3 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.2)] text-white font-bold transition-all transform hover:scale-105 active:scale-95 focus:outline-none ${
+            isSaving ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+          title="Lưu hồ sơ"
+        >
+          {isSaving ? (
+            <><i className="fas fa-spinner fa-spin mr-2"></i> Đang lưu...</>
+          ) : (
+            <span>Lưu</span>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

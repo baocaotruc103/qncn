@@ -44,9 +44,28 @@ export default function PersonnelList() {
     fetchPersonnel();
   }, []);
 
-  const currentUserName = (currentUser?.full_name || currentUser?.ho_ten || currentUser?.name || currentUser?.username || '').toLowerCase().trim();
-  const userRecordsCount = personnel.filter(p => (p.ho_ten_khai_sinh || '').toLowerCase().trim() === currentUserName).length;
-  const canCreateNew = currentUser?.role === 'admin' || userRecordsCount === 0;
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa hồ sơ của "${name}" không? Hành động này không thể hoàn tác.`)) {
+      return;
+    }
+    try {
+      await supabase.from('dao_tao_lai').delete().eq('ho_so_id', id);
+      await supabase.from('gia_dinh').delete().eq('ho_so_id', id);
+      await supabase.from('khen_thuong').delete().eq('ho_so_id', id);
+      await supabase.from('ky_luat').delete().eq('ho_so_id', id);
+      await supabase.from('luong_qua_trinh').delete().eq('ho_so_id', id);
+      
+      const { error } = await supabase.from('ho_so_qncn').delete().eq('id', id);
+      if (error) throw error;
+      
+      setPersonnel(prev => prev.filter(p => p.id !== id));
+    } catch (error) {
+      console.error('Lỗi khi xóa:', error);
+      alert('Không thể xóa hồ sơ. Vui lòng thử lại.');
+    }
+  };
+
+  const canCreateNew = currentUser?.role === 'admin' || personnel.length === 0;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -114,6 +133,11 @@ export default function PersonnelList() {
                     <Link to={`/personnel/view/${p.id}`} className="text-green-600 hover:text-green-900" title="Xem chi tiết">
                       <i className="fas fa-eye"></i> Xem
                     </Link>
+                    {currentUser?.role === 'admin' && (
+                      <button onClick={() => handleDelete(p.id, p.ho_ten_khai_sinh)} className="text-red-600 hover:text-red-900 ml-4" title="Xóa">
+                        <i className="fas fa-trash"></i> Xóa
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -153,6 +177,11 @@ export default function PersonnelList() {
                         <Link to={`/personnel/view/${p.id}`} className="flex-1 text-center px-3 py-2 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
                             <i className="fas fa-eye mr-1"></i> Chi tiết
                         </Link>
+                        {currentUser?.role === 'admin' && (
+                            <button onClick={() => handleDelete(p.id, p.ho_ten_khai_sinh)} className="flex-1 text-center px-3 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+                                <i className="fas fa-trash mr-1"></i> Xóa
+                            </button>
+                        )}
                     </div>
                 </div>
             ))
