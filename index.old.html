@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kê khai cá nhân - Hệ thống QL Quân lực</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Custom scrollbar for wide tables */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        /* Sticky headers for tables */
+        th {
+            position: sticky;
+            top: 0;
+            background-color: #f8fafc;
+            z-index: 10;
+        }
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important; /* Ngăn iOS tự động zoom khi tap vào ô nhập liệu */
+            }
+            td input, td select {
+                min-height: 40px; /* Tăng chiều cao vùng chạm trong bảng */
+                padding: 8px 4px !important;
+            }
+            /* CSS cho bảng dọc trên mobile */
+            .mobile-vertical-table table, .mobile-vertical-table tbody, .mobile-vertical-table tr { display: block; width: 100%; }
+            .mobile-vertical-table thead { display: none; }
+            .mobile-vertical-table tr { border: 1px solid #cbd5e1; margin-bottom: 1rem; border-radius: 0.5rem; background: #ffffff; padding: 0.5rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+            .mobile-vertical-table td { 
+                display: flex; 
+                flex-direction: column; 
+                border: none !important;
+                padding: 0.5rem !important;
+                border-bottom: 1px dashed #e2e8f0 !important;
+                text-align: left !important;
+            }
+            .mobile-vertical-table td:last-child { border-bottom: none !important; }
+            .mobile-vertical-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                font-size: 0.8rem;
+                color: #475569;
+                margin-bottom: 0.25rem;
+            }
+        }
+        .scroll-hint {
+            animation: pulse-text 2.5s infinite;
+        }
+        @keyframes pulse-text {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased pb-10 sm:pb-20">
+
+    <div class="max-w-7xl mx-auto pt-4 sm:pt-8 px-2 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="bg-blue-800 text-white p-4 sm:p-6 rounded-t-lg shadow-md text-center">
+            <h1 class="text-xl sm:text-2xl font-bold uppercase">Kê Khai Cá Nhân Nhập Liệu</h1>
+        </div>
+
+        <form id="quanLucForm" class="bg-white shadow-md rounded-b-lg p-3 sm:p-6" onsubmit="saveHoSo(event)">
+
+            <!-- TAB NAVIGATION -->
+            <div class="border-b border-gray-200 mb-6 -mx-3 sm:-mx-6 px-3 sm:px-6">
+                <nav class="-mb-px flex flex-wrap gap-x-4 gap-y-1 sm:gap-x-8 pb-1" aria-label="Tabs">
+                    <button type="button" onclick="openTab(event, 'tab1')" class="tab-links whitespace-nowrap py-2 sm:py-3 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" id="btn-tab1">1. TT Chung</button>
+                    <button type="button" onclick="openTab(event, 'tab2')" class="tab-links whitespace-nowrap py-2 sm:py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" id="btn-tab2">2. Đào tạo</button>
+                    <button type="button" onclick="openTab(event, 'tab3')" class="tab-links whitespace-nowrap py-2 sm:py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" id="btn-tab3">3. Gia đình</button>
+                    <button type="button" onclick="openTab(event, 'tab4')" class="tab-links whitespace-nowrap py-2 sm:py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" id="btn-tab4">4. Khen/Kỷ luật</button>
+                    <button type="button" onclick="openTab(event, 'tab5')" class="tab-links whitespace-nowrap py-2 sm:py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" id="btn-tab5">5. Nhận dạng</button>
+                    <button type="button" onclick="openTab(event, 'tab6')" class="tab-links whitespace-nowrap py-2 sm:py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" id="btn-tab6">6. Lương</button>
+                </nav>
+            </div>
+
+            <!-- PHẦN 1: THÔNG TIN CHUNG -->
+            <section id="tab1" class="tab-pane block">
+                <h3 class="text-xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4"><i class="fas fa-user-circle mr-2"></i>I. Thông tin chung</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">1. Họ tên khai sinh <span class="text-red-500">*</span></label>
+                        <input type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">2. Ngày tháng năm sinh <span class="text-red-500">*</span></label>
+                        <input type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">3. Đơn vị</label>
+                        <input type="text" value="Khoa Hồi sức ngoại, Bộ môn -Trung tâm Hồi sức cấp cứu chống độc, Bệnh viện Quân y 103" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">4. Tháng năm vào quân đội <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(thời gian nhập ngũ, tuyển dụng CNVQP, VCQP)</em></label>
+                        <input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">5. Số CMQNCN/CMSQ</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">5.1 Ngày cấp CMQNCN/CMSQ</label>
+                        <input type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">5.2 Nơi cấp CMQNCN/CMSQ</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">6. Quê quán <em class="text-xs text-gray-500 font-normal italic">(địa chỉ 2 cấp)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" placeholder="">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">7. Nhóm máu</label>
+                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 bg-white">
+                            <option value="">-- Chọn --</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="AB">AB</option>
+                            <option value="O">O</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">8. Số CCCD</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">8.1 Ngày cấp</label>
+                        <input type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">8.2 Nơi cấp</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">8.3 Hạn sử dụng</label>
+                        <input type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">9. Trình độ ngoại ngữ</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">10. Khối quân</label>
+                        <input type="text" value="Dự toán" readonly class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 border p-2 text-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">11. Họ tên thường dùng</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">12. Tình trạng hôn nhân <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(chưa kết hôn, đã kết hôn, đã ly hôn)</em></label>
+                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 bg-white">
+                            <option value="Chưa kết hôn">Chưa kết hôn</option>
+                            <option value="Đã kết hôn">Đã kết hôn</option>
+                            <option value="Đã ly hôn">Đã ly hôn</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <label class="block text-sm font-medium text-gray-700">13. Nơi thường trú <em class="text-xs text-gray-500 font-normal italic">(địa chỉ 2 cấp)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 mb-2">
+                        <label class="block text-sm font-medium text-gray-700">14. Nơi thường trú chi tiết <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(VD: số nhà, tổ dân phố...)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded border">
+                        <label class="block text-sm font-medium text-gray-700">15. Nơi tạm trú <em class="text-xs text-gray-500 font-normal italic">(địa chỉ 2 cấp)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 mb-2">
+                        <label class="block text-sm font-medium text-gray-700">16. Nơi tạm trú chi tiết <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(VD: số nhà, tổ dân phố...)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded border md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">17. Nơi ở hiện tại</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 mb-2">
+                        <label class="block text-sm font-medium text-gray-700">18. Nơi ở hiện tại chi tiết <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(VD: số nhà, tổ dân phố...)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                </div>
+
+                <!-- Cột mốc thời gian -->
+                <h4 class="font-medium text-gray-800 mt-6 mb-2">Các mốc thời gian</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="sm:col-span-2 md:col-span-2">
+                        <label class="block text-sm text-gray-700 font-medium">19. TN Tuyển dụng <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(đối với tuyển dụng VCQP, CNVQP, tuyển dụng từ HĐ hay ở ngoài vào QNCN)</em></label>
+                        <input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="mt-1 block w-full rounded border p-2 text-sm">
+                    </div>
+                    <div class="sm:col-span-2 md:col-span-2">
+                        <label class="block text-sm text-gray-700 font-medium">20. TN Nhập ngũ <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(đối với trường hợp đi nghĩa vụ quân sự)</em></label>
+                        <input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="mt-1 block w-full rounded border p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 font-medium">21. TN Xuất ngũ</label>
+                        <input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="mt-1 block w-full rounded border p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 font-medium">22. TN Tái ngũ</label>
+                        <input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="mt-1 block w-full rounded border p-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 font-medium">26. Ngày vào Đoàn</label>
+                        <input type="date" class="mt-1 block w-full rounded border p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 font-medium">27. Ngày vào Đảng</label>
+                        <input type="date" class="mt-1 block w-full rounded border p-2 text-sm">
+                    </div>
+                    <div class="sm:col-span-2 md:col-span-2">
+                        <label class="block text-sm text-gray-700 font-medium">Ngày chính thức <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(vào Đảng CSVN)</em></label>
+                        <input type="date" class="mt-1 block w-full rounded border p-2 text-sm">
+                    </div>
+                </div>
+            </section>
+
+            <!-- PHẦN 2: THÔNG TIN ĐÀO TẠO -->
+            <section id="tab2" class="tab-pane hidden">
+                <h3 class="text-xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4"><i class="fas fa-graduation-cap mr-2"></i>29. Thông tin đào tạo</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">29.1 Trình độ văn hóa</label>
+                        <input type="text" value="12/12" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div class="md:col-span-2 lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">29.2 Trình độ đào tạo cao nhất <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(Tiến sĩ, thạc sĩ, đại học...)</em></label>
+                        <input type="text" placeholder="" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div class="md:col-span-2 lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">29.3 Ngành nghề cao nhất <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(điều dưỡng...riêng quản lý bệnh viện không có)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">29.4 Năm tốt nghiệp <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(của đào tạo bậc cao nhất)</em></label>
+                        <input type="number" min="1950" max="2099" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">29.5 Trình độ liên quan CNQS <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(Đại học, cao đẳng...)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">29.6 Ngành nghề liên quan CNQS <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(điều dưỡng, kỹ sư, kế toán...)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
+                    </div>
+                </div>
+
+                <!-- Đào tạo lại -->
+                <div class="mt-4 border rounded-md overflow-hidden">
+                    <div class="bg-gray-100 p-2 flex justify-between items-center border-b">
+                        <span class="font-medium text-gray-700">29.7 Thông tin đào tạo lại</span>
+                        <button type="button" onclick="handleAddDaoTaoLai('tableDaoTaoLai')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 whitespace-nowrap ml-2"><i class="fas fa-plus"></i> Thêm dòng</button>
+                    </div>
+                    <div class="table-container overflow-x-auto w-full mobile-vertical-table bg-gray-50 p-2 sm:p-0 sm:bg-white">
+                        <table class="w-full text-sm text-left whitespace-nowrap" id="tableDaoTaoLai">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-2">Loại <em class="lowercase normal-case font-normal text-gray-500 block italic">(Bổ túc, chuyên tu, dài hạn,....)</em></th>
+                                    <th class="px-4 py-2">Bắt đầu <em class="lowercase normal-case font-normal text-gray-500 block italic">(thời gian đi học cao đẳng, đại học, ...)</em></th>
+                                    <th class="px-4 py-2">Kết thúc <em class="lowercase normal-case font-normal text-gray-500 block italic">(thời gian đi học cao đẳng, đại học, ...)</em></th>
+                                    <th class="px-4 py-2">Bậc đào tạo <em class="lowercase normal-case font-normal text-gray-500 block italic">(cao đẳng, đại học, ...)</em></th>
+                                    <th class="px-4 py-2">Tên trường <em class="lowercase normal-case font-normal text-gray-500 block italic">(cao đẳng, đại học, ...đã học)</em></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PHẦN 3: QUAN HỆ GIA ĐÌNH -->
+            <section id="tab3" class="tab-pane hidden">
+                <h3 class="text-xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4"><i class="fas fa-users mr-2"></i>30. Thông tin quan hệ gia đình</h3>
+                <p class="text-sm text-gray-500 mb-4 italic">Nhập thông tin cho các thành viên trong gia đình. Bỏ trống nếu không có thông tin.</p>
+                
+                <div class="border rounded-md overflow-hidden">
+                    <div class="bg-gray-100 p-2 flex justify-between items-center border-b">
+                        <span class="font-medium text-gray-700">Danh sách thành viên gia đình</span>
+                        <button type="button" onclick="handleAddGiaDinh()" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 whitespace-nowrap ml-2"><i class="fas fa-plus"></i> Thêm thành viên</button>
+                    </div>
+                    <div class="md:hidden text-xs text-blue-600 p-2 bg-blue-50 border-b scroll-hint"><i class="fas fa-arrows-alt-h mr-1"></i>Vuốt ngang để xem và chỉnh sửa các cột</div>
+                    <div class="table-container overflow-x-auto w-full bg-gray-50 p-2 sm:p-0 sm:bg-white">
+                        <table class="w-full text-sm text-left border-collapse" id="tableGiaDinh">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b">
+                                <tr>
+                                    <th class="border p-2 min-w-[140px]">Mối quan hệ</th>
+                                    <th class="border p-2 min-w-[180px]">Họ và tên</th>
+                                    <th class="border p-2 min-w-[100px]">Năm sinh</th>
+                                    <th class="border p-2 min-w-[150px]">Nghề nghiệp</th>
+                                    <th class="border p-2 min-w-[200px]">Trạng thái</th>
+                                    <th class="border p-2 min-w-[200px]">Nơi ở hiện tại</th>
+                                    <th class="border p-2 min-w-[200px]">Nơi ở chi tiết</th>
+                                    <th class="border p-2 min-w-[80px] text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyGiaDinh">
+                                <!-- JS injected rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PHẦN 4: ĐÁNH GIÁ, KỶ LUẬT, KHEN THƯỞNG -->
+            <section id="tab4" class="tab-pane hidden">
+                <h3 class="text-xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4"><i class="fas fa-award mr-2"></i>31-32. Đánh giá, Khen thưởng & Kỷ luật</h3>
+                
+                <!-- 31 -->
+                <div class="mb-6">
+                    <h4 class="font-medium text-gray-800 mb-2">31. Xếp loại hoàn thành nhiệm vụ (Số lần/Năm)</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-blue-50 p-4 rounded border border-blue-100">
+                        <div>
+                            <label class="block text-sm text-gray-700">Xuất sắc</label>
+                            <input type="text" class="mt-1 block w-full rounded border p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700">Tốt</label>
+                            <input type="text" class="mt-1 block w-full rounded border p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700">Hoàn thành</label>
+                            <input type="text" class="mt-1 block w-full rounded border p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700">Không hoàn thành</label>
+                            <input type="text" class="mt-1 block w-full rounded border p-2">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 32.1 Khen thưởng -->
+                <div class="border rounded-md overflow-hidden mb-4">
+                    <div class="bg-gray-100 p-2 flex justify-between items-center border-b">
+                        <span class="font-medium text-gray-700">32.1 Thông tin khen thưởng</span>
+                        <button type="button" onclick="handleAddKhenKy('tableKhenThuong', 'Thêm Khen thưởng')" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 whitespace-nowrap ml-2"><i class="fas fa-plus"></i> Thêm</button>
+                    </div>
+                    <div class="md:hidden text-xs text-blue-600 p-2 bg-blue-50 border-b scroll-hint"><i class="fas fa-arrows-alt-h mr-1"></i>Vuốt ngang để xem và chỉnh sửa các cột</div>
+                    <div class="table-container overflow-x-auto w-full">
+                        <table class="w-full text-sm text-left whitespace-nowrap" id="tableKhenThuong">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-2 w-40">Ngày tháng năm</th>
+                                    <th class="px-4 py-2 w-48">Đánh giá xếp loại</th>
+                                    <th class="px-4 py-2">Lý do</th>
+                                    <th class="px-4 py-2 w-32">Loại</th>
+                                    <th class="px-4 py-2 w-32">Cấp</th>
+                                    <th class="px-4 py-2 w-64">File đính kèm</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 32.2 Kỷ luật -->
+                <div class="border rounded-md overflow-hidden">
+                    <div class="bg-gray-100 p-2 flex justify-between items-center border-b">
+                        <span class="font-medium text-gray-700">32.2 Thông tin kỷ luật</span>
+                        <button type="button" onclick="handleAddKhenKy('tableKyLuat', 'Thêm Kỷ luật')" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 whitespace-nowrap ml-2"><i class="fas fa-plus"></i> Thêm</button>
+                    </div>
+                    <div class="md:hidden text-xs text-blue-600 p-2 bg-blue-50 border-b scroll-hint"><i class="fas fa-arrows-alt-h mr-1"></i>Vuốt ngang để xem và chỉnh sửa các cột</div>
+                    <div class="table-container overflow-x-auto w-full">
+                        <table class="w-full text-sm text-left whitespace-nowrap" id="tableKyLuat">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-2 w-40">Ngày tháng năm</th>
+                                    <th class="px-4 py-2 w-48">Đánh giá xếp loại</th>
+                                    <th class="px-4 py-2">Lý do</th>
+                                    <th class="px-4 py-2 w-32">Loại</th>
+                                    <th class="px-4 py-2 w-32">Cấp</th>
+                                    <th class="px-4 py-2 w-64">File đính kèm</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PHẦN 5: ĐẶC ĐIỂM & SỨC KHỎE -->
+            <section id="tab5" class="tab-pane hidden">
+                <h3 class="text-xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4"><i class="fas fa-fingerprint mr-2"></i>33 & 38. Đặc điểm nhận dạng & Sức khỏe</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">33.1 Cao (m)</label>
+                        <input type="number" step="0.01" class="mt-1 block w-full rounded border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">33.2 Sống mũi</label>
+                        <input type="text" class="mt-1 block w-full rounded border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">33.3 Nếp tai dưới</label>
+                        <input type="text" class="mt-1 block w-full rounded border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">33.4 Dái tai</label>
+                        <input type="text" class="mt-1 block w-full rounded border p-2">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">33.5 Dấu vết riêng <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(ghi giống dấu vết riêng trên CCCD)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded border p-2" placeholder="">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-sm font-medium text-gray-700">33.6 Hạn dùng <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(Quân hàm trung tá CN trở xuống ghi đến tháng sinh khi đủ 56 tuổi; quân hàm Thượng tá CN đối với nam tháng sinh của năm đủ 58 tuổi, với nữ tháng sinh năm đủ 57 tuổi)</em></label>
+                        <input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="mt-1 block w-full rounded border p-2">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-sm font-medium text-gray-700">38. Thông tin sức khỏe <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(loại 1, loại 2, ...Thông tin mắc bệnh hiểm nghèo/Bệnh cần chữa trị dài ngày căn cứ vào kết luận khám sức khỏe hàng năm)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded border p-2">
+                    </div>
+                </div>
+            </section>
+
+            <!-- PHẦN 6: THÔNG TIN LƯƠNG -->
+            <section id="tab6" class="tab-pane hidden">
+                <h3 class="text-xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 mb-4"><i class="fas fa-money-bill-wave mr-2"></i>34. Thông tin lương</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">34.1 Bắt đầu đóng BHXH</label>
+                        <input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="mt-1 block w-full rounded border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">34.2 Số sổ <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(là 10 số cuối thẻ BHYT)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded border p-2">
+                    </div>
+                    <div class="md:col-span-2 lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">34.3 Theo chế độ <em class="text-xs text-gray-500 font-normal block mt-0.5 italic">(tuyển dụng QNCN, VCQP, CNQP; tuyển chọn QNCN không nhập được LĐHĐ thì để trống)</em></label>
+                        <input type="text" class="mt-1 block w-full rounded border p-2" placeholder="">
+                    </div>
+                </div>
+
+                <div class="border rounded-md overflow-hidden">
+                    <div class="bg-blue-50 p-3 flex justify-between items-center border-b">
+                        <span class="font-bold text-blue-800">34.4 Quá trình công tác và hưởng lương</span>
+                        <button type="button" onclick="openLuongModal()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-medium whitespace-nowrap ml-2"><i class="fas fa-plus"></i> Thêm mới</button>
+                    </div>
+                    <div class="md:hidden text-xs text-blue-600 p-2 bg-blue-50 border-b scroll-hint"><i class="fas fa-arrows-alt-h mr-1"></i>Vuốt ngang để xem và nhập tất cả các cột</div>
+                    <div class="table-container overflow-x-auto w-full pb-4" style="max-height: 500px; overflow-y: auto;">
+                        <table class="w-full text-sm text-left border-collapse" id="tableLuong">
+                            <thead class="text-xs text-gray-700 bg-gray-100 shadow-sm border-b-2 border-gray-300">
+                                <tr>
+                                    <th class="border p-2 min-w-[50px] text-center">STT</th>
+                                    <th class="border p-2 min-w-[120px]">Từ tháng</th>
+                                    <th class="border p-2 min-w-[120px]">Đến tháng</th>
+                                    <th class="border p-2 min-w-[150px]">Đơn vị (cấp trực thuộc)</th>
+                                    <th class="border p-2 min-w-[150px]">Đơn vị (chi tiết)</th>
+                                    <th class="border p-2 min-w-[150px]">Loại thay đổi</th>
+                                    <th class="border p-2 min-w-[120px]">Diện quản lý</th>
+                                    <th class="border p-2 min-w-[120px]">Diện bố trí</th>
+                                    <th class="border p-2 min-w-[120px]">Cấp bậc</th>
+                                    <th class="border p-2 min-w-[150px]">Chức vụ, CNQS đang làm</th>
+                                    <th class="border p-2 min-w-[120px]">T.N đảm nhận CNQS</th>
+                                    <th class="border p-2 min-w-[100px]">Loại (ngạch)</th>
+                                    <th class="border p-2 min-w-[100px]">Nhóm</th>
+                                    <th class="border p-2 min-w-[80px]">Bậc</th>
+                                    <th class="border p-2 min-w-[80px]">Hệ số</th>
+                                    <th class="border p-2 min-w-[80px]">PC VK(%)</th>
+                                    <th class="border p-2 min-w-[80px]">Hệ số BL</th>
+                                    <th class="border p-2 min-w-[80px]">PC C.Vụ</th>
+                                    <th class="border p-2 min-w-[80px]">PC TN Nghề</th>
+                                    <th class="border p-2 min-w-[120px]">T.N bắt đầu đảm nhận</th>
+                                    <th class="border p-2 min-w-[60px] text-center">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyLuong">
+                                <!-- JS injected rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-sm text-gray-500 italic">
+                    * Lưu ý: Các mục 35, 36, 37, 39, 40 (Tăng giảm, Vắng mặt, Đào ngũ, Trích yếu, Tài liệu đính kèm) không cần nhập liệu trên form này theo yêu cầu.
+                </div>
+            </section>
+
+            <!-- Submit Buttons -->
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:space-x-4 pt-6 border-t mt-8">
+                <button type="button" class="px-6 py-3 sm:py-2 border border-gray-300 rounded text-gray-700 bg-white hover:bg-gray-50 font-medium text-center w-full sm:w-auto">Hủy bỏ</button>
+                <button type="submit" class="px-6 py-3 sm:py-2 bg-blue-700 rounded text-white hover:bg-blue-800 font-medium shadow-md text-center w-full sm:w-auto"><i class="fas fa-save mr-2"></i>Lưu hồ sơ</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal Thêm Quan hệ gia đình -->
+    <div id="giaDinhModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) closeGiaDinhModal()">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[95vh] flex flex-col transform transition-all">
+            <!-- Header -->
+            <div class="p-4 border-b flex justify-between items-center bg-blue-50 rounded-t-lg shrink-0">
+                <h3 class="text-lg font-bold text-blue-800"><i class="fas fa-user-plus mr-2"></i>Thêm thành viên gia đình</h3>
+                <button type="button" onclick="closeGiaDinhModal()" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <!-- Body -->
+            <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+                <form id="formGiaDinh" onsubmit="saveGiaDinh(event)">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-gray-600 font-medium">Mối quan hệ <span class="text-red-500">*</span></label>
+                            <select id="gd_quanHe" class="mt-1 w-full border border-gray-300 rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none bg-white" required onchange="toggleModalPhoneVoChong(this)">
+                                <option value="">-- Chọn mối quan hệ --</option>
+                                <option value="Ông ngoại">Ông ngoại</option>
+                                <option value="Bà ngoại">Bà ngoại</option>
+                                <option value="Ông nội">Ông nội</option>
+                                <option value="Bà nội">Bà nội</option>
+                                <option value="Cha đẻ">Cha đẻ</option>
+                                <option value="Mẹ đẻ">Mẹ đẻ</option>
+                                <option value="Cha vợ (chồng)">Cha vợ (chồng)</option>
+                                <option value="Mẹ vợ (chồng)">Mẹ vợ (chồng)</option>
+                                <option value="Vợ (chồng)">Vợ (chồng)</option>
+                                <option value="Con">Con</option>
+                                <option value="Anh">Anh</option>
+                                <option value="Chị">Chị</option>
+                                <option value="Em">Em</option>
+                                <option value="Cháu ruột">Cháu ruột</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 font-medium">Họ và tên <span class="text-red-500">*</span></label>
+                            <input type="text" id="gd_hoTen" class="mt-1 w-full border border-gray-300 rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" required>
+                            <input type="tel" id="gd_soDienThoai" class="hidden mt-2 w-full border border-blue-300 bg-blue-50 p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none rounded" placeholder="Số điện thoại...">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs text-gray-600 font-medium">Năm sinh</label><input type="number" id="gd_namSinh" class="mt-1 w-full border border-gray-300 rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-xs text-gray-600 font-medium">Nghề nghiệp</label><input type="text" id="gd_ngheNghiep" class="mt-1 w-full border border-gray-300 rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 font-medium">Trạng thái</label>
+                            <div class="flex gap-2 items-center mt-1">
+                                <select id="gd_trangThai" class="w-full text-sm border-gray-300 rounded p-2 border focus:ring-blue-500 bg-white" onchange="toggleModalNamChet(this)">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="Còn sống">Còn sống</option>
+                                    <option value="Đã chết">Đã chết</option>
+                                </select>
+                                <input type="number" id="gd_namChet" placeholder="Năm chết" class="hidden w-1/2 text-sm border-gray-300 rounded p-2 border focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Nơi ở hiện tại</label><input type="text" id="gd_noiO" class="mt-1 w-full border border-gray-300 rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Địa chỉ 2 cấp (Q/Huyện, Tỉnh/TP)"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Nơi ở chi tiết</label><input type="text" id="gd_noiOChiTiet" class="mt-1 w-full border border-gray-300 rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Số nhà, tổ dân phố..."></div>
+                    </div>
+                </form>
+            </div>
+            <!-- Footer -->
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg shrink-0">
+                <button type="button" onclick="closeGiaDinhModal()" class="px-5 py-2 border rounded-md text-gray-700 hover:bg-gray-100 font-medium text-sm">Hủy bỏ</button>
+                <button type="submit" form="formGiaDinh" class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium shadow-sm text-sm"><i class="fas fa-check mr-2"></i>Lưu vào bảng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Đào Tạo Lại -->
+    <div id="daoTaoLaiModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) closeDaoTaoLaiModal()">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[95vh] flex flex-col transform transition-all">
+            <!-- Header -->
+            <div class="p-4 border-b flex justify-between items-center bg-blue-50 rounded-t-lg shrink-0">
+                <h3 class="text-lg font-bold text-blue-800"><i class="fas fa-plus-circle mr-2"></i>Thêm thông tin đào tạo lại</h3>
+                <button type="button" onclick="closeDaoTaoLaiModal()" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <!-- Body -->
+            <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+                <form id="formDaoTaoLai" onsubmit="saveDaoTaoLai(event)">
+                    <div class="space-y-3">
+                        <div><label class="block text-xs text-gray-600 font-medium">Loại <em class="lowercase normal-case font-normal text-gray-500 italic">(Bổ túc, chuyên tu...)</em></label><input type="text" id="dtl_loai" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Bắt đầu</label><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year id="dtl_batDau" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Kết thúc</label><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year id="dtl_ketThuc" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Bậc đào tạo</label><input type="text" id="dtl_bac" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Tên trường</label><input type="text" id="dtl_truong" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                    </div>
+                </form>
+            </div>
+            <!-- Footer -->
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg shrink-0">
+                <button type="button" onclick="closeDaoTaoLaiModal()" class="px-5 py-2 border rounded-md text-gray-700 hover:bg-gray-100 font-medium text-sm">Hủy bỏ</button>
+                <button type="submit" form="formDaoTaoLai" class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium shadow-sm text-sm"><i class="fas fa-check mr-2"></i>Lưu vào bảng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Lương -->
+    <div id="luongModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) closeLuongModal()">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[95vh] flex flex-col transform transition-all">
+            <!-- Header -->
+            <div class="p-4 border-b flex justify-between items-center bg-blue-50 rounded-t-lg shrink-0">
+                <h3 class="text-lg font-bold text-blue-800"><i class="fas fa-plus-circle mr-2"></i>Thêm quá trình công tác và hưởng lương</h3>
+                <button type="button" onclick="closeLuongModal()" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <!-- Body -->
+            <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+                <form id="formThemLuong" onsubmit="saveLuong(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div><label class="block text-xs text-gray-600 font-medium">Từ tháng <span class="text-red-500">*</span></label><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year id="l_tuThang" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" required></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Đến tháng</label><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year id="l_denThang" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div class="lg:col-span-2"><label class="block text-xs text-gray-600 font-medium">Đơn vị (cấp trực thuộc)</label><input type="text" id="l_donVi1" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div class="lg:col-span-2"><label class="block text-xs text-gray-600 font-medium">Đơn vị (chi tiết)</label><input type="text" id="l_donVi2" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div class="lg:col-span-2"><label class="block text-xs text-gray-600 font-medium">Loại thay đổi</label><select id="l_loaiThayDoi" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none bg-white"></select></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Diện quản lý</label><input type="text" id="l_dienQuanLy" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Diện bố trí</label><select id="l_dienBoTri" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none bg-white"></select></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Cấp bậc</label><select id="l_capBac" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none bg-white"></select></div>
+                        <div class="lg:col-span-2"><label class="block text-xs text-gray-600 font-medium">Chức vụ, CNQS đang làm</label><input type="text" id="l_chucVu" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">T.N đảm nhận CNQS</label><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year id="l_tnDamNhan" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Loại (ngạch)</label><select id="l_loaiNgach" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none bg-white"></select></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Nhóm</label><select id="l_nhom" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none bg-white"></select></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Bậc</label><select id="l_bac" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none bg-white"></select></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Hệ số</label><input type="number" step="0.01" id="l_heSo" readonly class="mt-1 w-full border rounded p-2 text-sm bg-gray-100 text-gray-700 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">PC VK(%)</label><input type="number" step="0.01" id="l_pcVK" readonly class="mt-1 w-full border rounded p-2 text-sm bg-gray-100 text-gray-700 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Hệ số BL</label><input type="number" step="0.01" id="l_heSoBL" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">PC C.Vụ</label><input type="number" step="0.01" id="l_pcCVu" readonly class="mt-1 w-full border rounded p-2 text-sm bg-gray-100 text-gray-700 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">PC TN Nghề</label><input type="number" step="0.01" id="l_pcTNNghe" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">T.N bắt đầu đảm nhận</label><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year id="l_tnBatDau" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                    </div>
+                    <div id="luongSuggestion" class="hidden mt-4 rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900"></div>
+                </form>
+            </div>
+            <!-- Footer -->
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg shrink-0">
+                <button type="button" onclick="closeLuongModal()" class="px-5 py-2 border rounded-md text-gray-700 hover:bg-gray-100 font-medium">Hủy bỏ</button>
+                <button type="submit" form="formThemLuong" class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium shadow-sm"><i class="fas fa-check mr-2"></i>Lưu vào bảng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm Khen Thưởng / Kỷ Luật -->
+    <div id="khenKyModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) closeKhenKyModal()">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[95vh] flex flex-col transform transition-all">
+            <!-- Header -->
+            <div class="p-4 border-b flex justify-between items-center bg-blue-50 rounded-t-lg shrink-0">
+                <h3 class="text-lg font-bold text-blue-800" id="khenKyModalTitle"><i class="fas fa-plus-circle mr-2"></i>Thêm thông tin</h3>
+                <button type="button" onclick="closeKhenKyModal()" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <!-- Body -->
+            <div class="p-4 overflow-y-auto custom-scrollbar flex-1">
+                <form id="formKhenKy" onsubmit="saveKhenKy(event)">
+                    <input type="hidden" id="kk_tableId">
+                    <div class="space-y-3">
+                        <div><label class="block text-xs text-gray-600 font-medium">Ngày tháng năm <span class="text-red-500">*</span></label><input type="date" id="kk_ngay" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none" required></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Đánh giá xếp loại</label><input type="text" id="kk_danhGia" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Lý do</label><input type="text" id="kk_lyDo" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Loại</label><input type="text" id="kk_loai" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">Cấp</label><input type="text" id="kk_cap" class="mt-1 w-full border rounded p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-xs text-gray-600 font-medium">File đính kèm</label><input type="file" id="kk_file" accept="image/*,.pdf" class="mt-1 w-full border border-gray-300 rounded p-1.5 text-sm file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"></div>
+                    </div>
+                </form>
+            </div>
+            <!-- Footer -->
+            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg shrink-0">
+                <button type="button" onclick="closeKhenKyModal()" class="px-5 py-2 border rounded-md text-gray-700 hover:bg-gray-100 font-medium text-sm">Hủy bỏ</button>
+                <button type="submit" form="formKhenKy" class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium shadow-sm text-sm"><i class="fas fa-check mr-2"></i>Lưu vào bảng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMPLATES DÀNH CHO JAVASCRIPT (Hidden) -->
+    <template id="templateLuong">
+        <tr class="border-b bg-white hover:bg-blue-50 transition-colors luong-row">
+            <td class="p-2 border text-center stt-column font-medium text-gray-500"></td>
+            <td class="p-1 border"><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="number" step="0.01" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="number" step="0.01" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="number" step="0.01" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="number" step="0.01" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="number" step="0.01" class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border"><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>
+            <td class="p-1 border text-center">
+                <button type="button" onclick="removeLuongRow(this)" class="text-red-500 hover:text-red-700 bg-red-50 p-1 rounded" title="Xóa dòng"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    </template>
+
+    <template id="templateDaoTaoLai">
+        <tr class="border-b bg-white hover:bg-gray-50">
+            <td class="p-2 border" data-label="Loại (Bổ túc, chuyên tu...)"><input type="text" class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border" data-label="Bắt đầu"><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border" data-label="Kết thúc"><input type="text" inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border" data-label="Bậc đào tạo"><input type="text" class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border" data-label="Tên trường"><input type="text" class="w-full border-gray-300 rounded text-sm p-1"></td>
+        </tr>
+    </template>
+
+    <template id="templateKhenKluat">
+        <tr class="border-b bg-white hover:bg-gray-50">
+            <td class="p-2 border"><input type="date" class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border"><input type="text" class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border"><input type="text" class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border"><input type="text" class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border"><input type="text" class="w-full border-gray-300 rounded text-sm p-1"></td>
+            <td class="p-2 border"><input type="file" accept="image/*,.pdf" class="w-full border-gray-300 rounded text-sm p-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"></td>
+        </tr>
+    </template>
+
+    <script>
+        let supabaseClient = null;
+        let supabaseConfigPromise = null;
+
+        async function loadSupabaseConfig() {
+            if (supabaseConfigPromise) return supabaseConfigPromise;
+
+            if (window.location.protocol === 'file:') {
+                throw new Error('Không thể đọc .env.local khi mở bằng file://. Hãy chạy: node server.js rồi mở http://localhost:5173');
+            }
+
+            supabaseConfigPromise = fetch('.env.local', { cache: 'no-store' })
+                .then(response => {
+                    if (!response.ok) throw new Error('Không đọc được file .env.local');
+                    return response.text();
+                })
+                .then(text => {
+                    const env = Object.fromEntries(
+                        text
+                            .split(/\r?\n/)
+                            .map(line => line.trim())
+                            .filter(line => line && !line.startsWith('#') && line.includes('='))
+                            .map(line => {
+                                const index = line.indexOf('=');
+                                return [line.slice(0, index).trim(), line.slice(index + 1).trim()];
+                            })
+                    );
+
+                    const supabaseUrl = env.SUPABASE_URL;
+                    const supabaseAnonKey = env.SUPABASE_ANON_KEY;
+
+                    if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('YOUR_PROJECT_REF') || supabaseAnonKey.includes('YOUR_SUPABASE_ANON_KEY')) {
+                        throw new Error('Chưa cấu hình SUPABASE_URL hoặc SUPABASE_ANON_KEY trong .env.local');
+                    }
+
+                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                    return supabaseClient;
+                });
+
+            return supabaseConfigPromise;
+        }
+
+        function getControls(sectionSelector) {
+            return Array.from(document.querySelectorAll(`${sectionSelector} input, ${sectionSelector} select, ${sectionSelector} textarea`));
+        }
+
+        function getValueFromControls(controls, index) {
+            const control = controls[index];
+            if (!control) return null;
+            if (control.type === 'file') return control.files?.[0] || null;
+            if (control.dataset.monthYear !== undefined) {
+                control.value = normalizeMonthYear(control.value);
+            }
+            const value = String(control.value ?? '').trim();
+            return value || null;
+        }
+
+        function numberOrNull(value) {
+            if (value === null || value === undefined || value === '') return null;
+            const numberValue = Number(value);
+            return Number.isFinite(numberValue) ? numberValue : null;
+        }
+
+        function rowHasData(values) {
+            return Object.values(values).some(value => value !== null && value !== undefined && value !== '');
+        }
+
+        function getRowInputValue(row, index) {
+            const input = row.querySelectorAll('input, select, textarea')[index];
+            if (!input) return null;
+            if (input.dataset.monthYear !== undefined) {
+                input.value = normalizeMonthYear(input.value);
+            }
+            const value = String(input.value ?? '').trim();
+            return value || null;
+        }
+
+        function collectHoSoPayload(hoSoId) {
+            const tab1 = getControls('#tab1');
+            const tab2 = getControls('#tab2');
+            const tab4 = getControls('#tab4');
+            const tab5 = getControls('#tab5');
+            const tab6 = getControls('#tab6 > .grid');
+
+            return {
+                id: hoSoId,
+                ho_ten_khai_sinh: getValueFromControls(tab1, 0),
+                ngay_sinh: getValueFromControls(tab1, 1),
+                don_vi: getValueFromControls(tab1, 2),
+                thang_nam_vao_quan_doi: getValueFromControls(tab1, 3),
+                so_cmqncn_cmsq: getValueFromControls(tab1, 4),
+                ngay_cap_cmqncn_cmsq: getValueFromControls(tab1, 5),
+                noi_cap_cmqncn_cmsq: getValueFromControls(tab1, 6),
+                que_quan: getValueFromControls(tab1, 7),
+                nhom_mau: getValueFromControls(tab1, 8),
+                so_cccd: getValueFromControls(tab1, 9),
+                ngay_cap_cccd: getValueFromControls(tab1, 10),
+                noi_cap_cccd: getValueFromControls(tab1, 11),
+                han_su_dung_cccd: getValueFromControls(tab1, 12),
+                trinh_do_ngoai_ngu: getValueFromControls(tab1, 13),
+                khoi_quan: getValueFromControls(tab1, 14),
+                ho_ten_thuong_dung: getValueFromControls(tab1, 15),
+                tinh_trang_hon_nhan: getValueFromControls(tab1, 16),
+                noi_thuong_tru: getValueFromControls(tab1, 17),
+                noi_thuong_tru_chi_tiet: getValueFromControls(tab1, 18),
+                noi_tam_tru: getValueFromControls(tab1, 19),
+                noi_tam_tru_chi_tiet: getValueFromControls(tab1, 20),
+                noi_o_hien_tai: getValueFromControls(tab1, 21),
+                noi_o_hien_tai_chi_tiet: getValueFromControls(tab1, 22),
+                tn_tuyen_dung: getValueFromControls(tab1, 23),
+                tn_nhap_ngu: getValueFromControls(tab1, 24),
+                tn_xuat_ngu: getValueFromControls(tab1, 25),
+                tn_tai_ngu: getValueFromControls(tab1, 26),
+                ngay_vao_doan: getValueFromControls(tab1, 27),
+                ngay_vao_dang: getValueFromControls(tab1, 28),
+                ngay_chinh_thuc_dang: getValueFromControls(tab1, 29),
+
+                trinh_do_van_hoa: getValueFromControls(tab2, 0),
+                trinh_do_dao_tao_cao_nhat: getValueFromControls(tab2, 1),
+                nganh_nghe_cao_nhat: getValueFromControls(tab2, 2),
+                nam_tot_nghiep: numberOrNull(getValueFromControls(tab2, 3)),
+                trinh_do_lien_quan_cnqs: getValueFromControls(tab2, 4),
+                nganh_nghe_lien_quan_cnqs: getValueFromControls(tab2, 5),
+
+                xep_loai_xuat_sac: getValueFromControls(tab4, 0),
+                xep_loai_tot: getValueFromControls(tab4, 1),
+                xep_loai_hoan_thanh: getValueFromControls(tab4, 2),
+                xep_loai_khong_hoan_thanh: getValueFromControls(tab4, 3),
+
+                chieu_cao_m: numberOrNull(getValueFromControls(tab5, 0)),
+                song_mui: getValueFromControls(tab5, 1),
+                nep_tai_duoi: getValueFromControls(tab5, 2),
+                dai_tai: getValueFromControls(tab5, 3),
+                dau_vet_rieng: getValueFromControls(tab5, 4),
+                han_dung: getValueFromControls(tab5, 5),
+                thong_tin_suc_khoe: getValueFromControls(tab5, 6),
+
+                bat_dau_dong_bhxh: getValueFromControls(tab6, 0),
+                so_so_bhxh: getValueFromControls(tab6, 1),
+                theo_che_do: getValueFromControls(tab6, 2)
+            };
+        }
+
+        function collectDaoTaoLaiRows(hoSoId) {
+            return Array.from(document.querySelectorAll('#tableDaoTaoLai tbody tr'))
+                .map((row, index) => ({
+                    ho_so_id: hoSoId,
+                    loai: getRowInputValue(row, 0),
+                    bat_dau: getRowInputValue(row, 1),
+                    ket_thuc: getRowInputValue(row, 2),
+                    bac_dao_tao: getRowInputValue(row, 3),
+                    ten_truong: getRowInputValue(row, 4),
+                    thu_tu: index + 1
+                }))
+                .filter(rowHasData);
+        }
+
+        function collectGiaDinhRows(hoSoId) {
+            return Array.from(document.querySelectorAll('#tbodyGiaDinh tr'))
+                .map((row, index) => {
+                    const relation = row.children[0]?.textContent.trim() || null;
+                    const nameInputs = row.children[1]?.querySelectorAll('input') || [];
+                    const statusSelect = row.children[4]?.querySelector('select');
+                    const namChetInput = row.children[4]?.querySelector('input');
+                    const data = {
+                        ho_so_id: hoSoId,
+                        moi_quan_he: relation,
+                        ho_ten: nameInputs[0]?.value.trim() || null,
+                        so_dien_thoai: nameInputs[1]?.value.trim() || null,
+                        nam_sinh: numberOrNull(row.children[2]?.querySelector('input')?.value),
+                        nghe_nghiep: row.children[3]?.querySelector('input')?.value.trim() || null,
+                        trang_thai: statusSelect?.value || null,
+                        nam_chet: numberOrNull(namChetInput?.value),
+                        noi_o_hien_tai: row.children[5]?.querySelector('input')?.value.trim() || null,
+                        noi_o_chi_tiet: row.children[6]?.querySelector('input')?.value.trim() || null,
+                        thu_tu: index + 1
+                    };
+                    return data;
+                })
+                .filter(row => row.moi_quan_he && row.ho_ten);
+        }
+
+        function sanitizeFileName(fileName) {
+            return String(fileName || 'file')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/Đ/g, 'D')
+                .replace(/[^a-zA-Z0-9._-]+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '') || 'file';
+        }
+
+        async function uploadQncnFile(file, hoSoId, folderName, index) {
+            if (!file) return null;
+
+            const safeName = sanitizeFileName(file.name);
+            const objectPath = `${hoSoId}/${folderName}/${String(index + 1).padStart(2, '0')}-${Date.now()}-${safeName}`;
+            const { error } = await supabaseClient
+                .storage
+                .from('file_qncn')
+                .upload(objectPath, file, {
+                    cacheControl: '3600',
+                    contentType: file.type || 'application/octet-stream',
+                    upsert: false
+                });
+
+            if (error) throw error;
+            return objectPath;
+        }
+
+        async function collectKhenKyRows(tableId, hoSoId) {
+            const folderName = tableId === 'tableKhenThuong' ? 'khen_thuong' : 'ky_luat';
+            const rows = Array.from(document.querySelectorAll(`#${tableId} tbody tr`));
+            const results = [];
+
+            for (const [index, row] of rows.entries()) {
+                const file = row.querySelector('input[type="file"]')?.files?.[0] || null;
+                const ngay = getRowInputValue(row, 0);
+                if (!ngay) continue;
+
+                const filePath = await uploadQncnFile(file, hoSoId, folderName, index);
+                results.push({
+                    ho_so_id: hoSoId,
+                    ngay,
+                    danh_gia_xep_loai: getRowInputValue(row, 1),
+                    ly_do: getRowInputValue(row, 2),
+                    loai: getRowInputValue(row, 3),
+                    cap: getRowInputValue(row, 4),
+                    file_dinh_kem: filePath,
+                    file_ten_goc: file?.name || null,
+                    file_mime_type: file?.type || null,
+                    file_size: file?.size || null,
+                    thu_tu: index + 1
+                });
+            }
+
+            return results;
+        }
+
+        function collectLuongRows(hoSoId) {
+            return Array.from(document.querySelectorAll('#tbodyLuong .luong-row'))
+                .map((row, index) => {
+                    const data = {
+                        ho_so_id: hoSoId,
+                        tu_thang: getRowInputValue(row, 0),
+                        den_thang: getRowInputValue(row, 1),
+                        don_vi_cap_truc_thuoc: getRowInputValue(row, 2),
+                        don_vi_chi_tiet: getRowInputValue(row, 3),
+                        loai_thay_doi: getRowInputValue(row, 4),
+                        dien_quan_ly: getRowInputValue(row, 5),
+                        dien_bo_tri: getRowInputValue(row, 6),
+                        cap_bac: getRowInputValue(row, 7),
+                        chuc_vu_cnqs: getRowInputValue(row, 8),
+                        tn_dam_nhan_cnqs: getRowInputValue(row, 9),
+                        loai_ngach: getRowInputValue(row, 10),
+                        nhom: getRowInputValue(row, 11),
+                        bac: getRowInputValue(row, 12),
+                        he_so: numberOrNull(getRowInputValue(row, 13)),
+                        pc_vk: numberOrNull(getRowInputValue(row, 14)),
+                        he_so_bl: numberOrNull(getRowInputValue(row, 15)),
+                        pc_chuc_vu: numberOrNull(getRowInputValue(row, 16)),
+                        pc_tn_nghe: numberOrNull(getRowInputValue(row, 17)),
+                        tn_bat_dau_dam_nhan: getRowInputValue(row, 18),
+                        thu_tu: index + 1
+                    };
+                    return data;
+                })
+                .filter(row => row.tu_thang || row.dien_bo_tri || row.cap_bac || row.he_so !== null);
+        }
+
+        async function insertRows(tableName, rows) {
+            if (!rows.length) return;
+            const { error } = await supabaseClient.from(tableName).insert(rows);
+            if (error) throw error;
+        }
+
+        async function saveHoSo(event) {
+            event.preventDefault();
+
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            const originalText = submitButton?.innerHTML;
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang lưu...';
+            }
+
+            try {
+                await loadSupabaseConfig();
+
+                const hoSoId = crypto.randomUUID();
+                const hoSo = collectHoSoPayload(hoSoId);
+
+                if (!hoSo.ho_ten_khai_sinh || !hoSo.ngay_sinh) {
+                    openTab(null, 'tab1');
+                    throw new Error('Vui lòng nhập Họ tên khai sinh và Ngày tháng năm sinh.');
+                }
+
+                const { error: hoSoError } = await supabaseClient.from('ho_so_qncn').insert(hoSo);
+                if (hoSoError) throw hoSoError;
+
+                await insertRows('dao_tao_lai', collectDaoTaoLaiRows(hoSoId));
+                await insertRows('gia_dinh', collectGiaDinhRows(hoSoId));
+                await insertRows('khen_thuong', await collectKhenKyRows('tableKhenThuong', hoSoId));
+                await insertRows('ky_luat', await collectKhenKyRows('tableKyLuat', hoSoId));
+                await insertRows('luong_qua_trinh', collectLuongRows(hoSoId));
+
+                alert('Đã lưu hồ sơ lên Supabase thành công.');
+            } catch (error) {
+                console.error(error);
+                alert(`Không lưu được dữ liệu: ${error.message || 'Lỗi không xác định'}`);
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initMonthYearFormatting();
+            initLuongAutoFill();
+
+            // Add initial row for salary table
+            addTableRow('tableLuong', 'templateLuong');
+            updateSalaryIndices();
+
+            // Lắng nghe sự kiện invalid để tự động chuyển tab nếu có trường bắt buộc chưa nhập
+            document.querySelectorAll('input[required], select[required]').forEach(el => {
+                el.addEventListener('invalid', function() {
+                    const tabPane = this.closest('.tab-pane');
+                    if (tabPane && tabPane.classList.contains('hidden')) {
+                        openTab(null, tabPane.id);
+                    }
+                });
+            });
+        });
+
+        // --- Logic Tab Navigation ---
+        function openTab(evt, tabName) {
+            // Ẩn tất cả các tab content
+            const tabcontent = document.getElementsByClassName("tab-pane");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("block");
+                tabcontent[i].classList.add("hidden");
+            }
+
+            // Xóa trạng thái active của tất cả các nút tab
+            const tablinks = document.getElementsByClassName("tab-links");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("border-blue-500", "text-blue-600");
+                tablinks[i].classList.add("border-transparent", "text-gray-500");
+            }
+
+            // Hiển thị tab được chọn và set active cho nút tương ứng
+            document.getElementById(tabName).classList.remove("hidden");
+            document.getElementById(tabName).classList.add("block");
+            
+            const activeBtn = evt ? evt.currentTarget : document.getElementById("btn-" + tabName);
+            if (activeBtn) {
+                activeBtn.classList.remove("border-transparent", "text-gray-500");
+                activeBtn.classList.add("border-blue-500", "text-blue-600");
+                // Scroll tab bar trên mobile để đảm bảo nút luôn nằm trong tầm nhìn
+                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+
+        function initMonthYearFormatting() {
+            document.addEventListener('focusout', event => {
+                if (!event.target.matches('[data-month-year]')) return;
+                event.target.value = normalizeMonthYear(event.target.value);
+            });
+        }
+
+        function normalizeMonthYear(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+
+            const yyyyMm = raw.match(/^(\d{4})-(0[1-9]|1[0-2])$/);
+            if (yyyyMm) return `${yyyyMm[2]}/${yyyyMm[1]}`;
+
+            const mmYyyy = raw.match(/^(0?[1-9]|1[0-2])\/(\d{4})$/);
+            if (mmYyyy) return `${mmYyyy[1].padStart(2, '0')}/${mmYyyy[2]}`;
+
+            const compact = raw.replace(/\D/g, '');
+            if (compact.length === 6) {
+                const month = compact.slice(0, 2);
+                const year = compact.slice(2);
+                if (Number(month) >= 1 && Number(month) <= 12) return `${month}/${year}`;
+            }
+
+            return raw;
+        }
+
+        function parseMonthYear(value) {
+            const normalized = normalizeMonthYear(value);
+            const match = normalized.match(/^(0[1-9]|1[0-2])\/(\d{4})$/);
+            if (!match) return null;
+            return { month: Number(match[1]), year: Number(match[2]), value: normalized };
+        }
+
+        // --- Logic cho bảng Quan hệ gia đình ---
+        
+        // Hàm mở Modal Thêm Gia đình
+        function handleAddGiaDinh(btn = null, defaultRelName = '') {
+            document.getElementById('giaDinhModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            // Reset form
+            document.getElementById('formGiaDinh').reset();
+            toggleModalNamChet(document.getElementById('gd_trangThai'));
+            toggleModalPhoneVoChong(document.getElementById('gd_quanHe'));
+
+            if (defaultRelName) {
+                document.getElementById('gd_quanHe').value = defaultRelName;
+                toggleModalPhoneVoChong(document.getElementById('gd_quanHe'));
+            }
+
+            // Lưu tham chiếu nút bấm hiện tại để chèn liền kề
+            window.currentGiaDinhBtn = btn;
+        }
+
+        function closeGiaDinhModal() {
+            document.getElementById('giaDinhModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Lưu thông tin gia đình từ Modal xuống bảng
+        function saveGiaDinh(event) {
+            event.preventDefault();
+            
+            const quanHe = document.getElementById('gd_quanHe').value;
+            const hoTen = document.getElementById('gd_hoTen').value;
+            const soDienThoai = document.getElementById('gd_soDienThoai').value;
+            const namSinh = document.getElementById('gd_namSinh').value;
+            const ngheNghiep = document.getElementById('gd_ngheNghiep').value;
+            const trangThai = document.getElementById('gd_trangThai').value;
+            const namChet = document.getElementById('gd_namChet').value;
+            const noiO = document.getElementById('gd_noiO').value;
+            const noiOChiTiet = document.getElementById('gd_noiOChiTiet').value;
+            
+            const tr = document.createElement('tr');
+            tr.className = "bg-white hover:bg-gray-50 border-b group transition-colors";
+            
+            const actionBtn = `
+                <button type="button" onclick="handleAddGiaDinh(this, '${quanHe}')" class="text-green-600 hover:bg-green-200 bg-green-100 p-1 px-2 rounded font-bold transition-colors" title="Thêm người"><i class="fas fa-plus"></i></button>
+                <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:bg-red-200 bg-red-100 p-1 px-2 rounded ml-1 transition-colors" title="Xóa dòng"><i class="fas fa-trash"></i></button>
+            `;
+
+            let nameInputHtml = `<input type="text" class="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded" value="${hoTen}">`;
+            if (quanHe === 'Vợ (chồng)') {
+                nameInputHtml = `
+                    <input type="text" class="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded" oninput="togglePhoneVoChong(this)" placeholder="Nhập tên vợ/chồng..." value="${hoTen}">
+                    <input type="tel" class="phone-vo-chong mt-1 w-full text-sm border border-blue-300 bg-blue-50 p-1.5 outline-none focus:ring-1 focus:ring-blue-500 rounded ${soDienThoai ? '' : 'hidden'}" placeholder="Số điện thoại..." value="${soDienThoai}">
+                `;
+            }
+
+            const trangThaiHtml = `
+                <div class="flex flex-col sm:flex-row gap-1 items-start sm:items-center">
+                    <select class="w-full sm:flex-1 text-sm border-gray-300 rounded p-1 border focus:ring-blue-500 bg-white" onchange="toggleNamChetTable(this)">
+                        <option value="" ${trangThai === '' ? 'selected' : ''}>-- Chọn --</option>
+                        <option value="Còn sống" ${trangThai === 'Còn sống' ? 'selected' : ''}>Còn sống</option>
+                        <option value="Đã chết" ${trangThai === 'Đã chết' ? 'selected' : ''}>Đã chết</option>
+                    </select>
+                    <input type="number" placeholder="Năm chết" class="w-full sm:w-24 mt-1 sm:mt-0 text-sm border-gray-300 rounded p-1 border focus:ring-blue-500 ${trangThai === 'Đã chết' ? '' : 'hidden'}" value="${namChet}">
+                </div>
+            `;
+
+            tr.innerHTML = `
+                <td class="p-2 border font-medium text-gray-700 whitespace-nowrap bg-gray-50 align-top pt-2" data-label="Mối quan hệ">${quanHe}</td>
+                <td class="p-1 border align-top pt-2" data-label="Họ và tên">${nameInputHtml}</td>
+                <td class="p-1 border align-top pt-2" data-label="Năm sinh"><input type="number" class="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded" value="${namSinh}"></td>
+                <td class="p-1 border align-top pt-2" data-label="Nghề nghiệp"><input type="text" class="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded" value="${ngheNghiep}"></td>
+                <td class="p-1 border align-top pt-2" data-label="Trạng thái">${trangThaiHtml}</td>
+                <td class="p-1 border align-top pt-2" data-label="Nơi ở hiện tại"><input type="text" class="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded" placeholder="Địa chỉ 2 cấp (Q/Huyện, Tỉnh/TP)" value="${noiO}"></td>
+                <td class="p-1 border align-top pt-2" data-label="Nơi ở chi tiết"><input type="text" class="w-full text-sm border-0 bg-transparent p-1 outline-none focus:ring-1 focus:ring-blue-500 rounded" placeholder="Số nhà, tổ dân phố..." value="${noiOChiTiet}"></td>
+                <td class="p-1 border text-center action-td align-top pt-2" data-label="Thao tác">${actionBtn}</td>
+            `;
+
+            if (window.currentGiaDinhBtn) {
+                const currentRow = window.currentGiaDinhBtn.closest('tr');
+                currentRow.parentNode.insertBefore(tr, currentRow.nextSibling);
+            } else {
+                document.getElementById('tbodyGiaDinh').appendChild(tr);
+            }
+            
+            closeGiaDinhModal();
+        }
+
+        // Logic toggle trong Modal
+        function toggleModalPhoneVoChong(selectElement) {
+            const phoneInput = document.getElementById('gd_soDienThoai');
+            if (selectElement.value === 'Vợ (chồng)') {
+                phoneInput.classList.remove('hidden');
+            } else {
+                phoneInput.classList.add('hidden');
+                phoneInput.value = '';
+            }
+        }
+
+        function toggleModalNamChet(selectElement) {
+            const inputNamChet = document.getElementById('gd_namChet');
+            if (selectElement.value === 'Đã chết') {
+                inputNamChet.classList.remove('hidden');
+                selectElement.classList.remove('w-full');
+                selectElement.classList.add('w-1/2'); // Thu nhỏ select để hiện input
+            } else {
+                inputNamChet.classList.add('hidden');
+                inputNamChet.value = '';
+                selectElement.classList.remove('w-1/2');
+                selectElement.classList.add('w-full');
+            }
+        }
+
+        // Hiển thị ô nhập số điện thoại nếu là Vợ/Chồng (Dành cho bảng)
+        function togglePhoneVoChong(inputElement) {
+            const phoneInput = inputElement.parentElement.querySelector('.phone-vo-chong');
+            if (phoneInput) {
+                if (inputElement.value.trim() !== '') {
+                    phoneInput.classList.remove('hidden');
+                } else {
+                    phoneInput.classList.add('hidden');
+                    phoneInput.value = ''; // Xóa số điện thoại nếu xóa trống tên
+                }
+            }
+        }
+
+        // Hiển thị ô nhập năm chết trong bảng gia đình
+        function toggleNamChetTable(selectElement) {
+            const inputNamChet = selectElement.nextElementSibling;
+            if (selectElement.value === 'Đã chết') {
+                inputNamChet.classList.remove('hidden');
+            } else {
+                inputNamChet.classList.add('hidden');
+            }
+        }
+
+        // 2. Hàm dùng chung để thêm dòng vào bảng
+        function addTableRow(tableId, templateId) {
+            const template = document.getElementById(templateId);
+            const table = document.getElementById(tableId).querySelector('tbody');
+            const clone = template.content.cloneNode(true);
+            table.appendChild(clone);
+        }
+
+        // --- Logic cho bảng Đào tạo lại (Bật Modal khi dùng mobile) ---
+        function handleAddDaoTaoLai(tableId) {
+            if (window.innerWidth <= 768) {
+                document.getElementById('daoTaoLaiModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                addTableRow(tableId, 'templateDaoTaoLai');
+            }
+        }
+
+        function closeDaoTaoLaiModal() {
+            document.getElementById('daoTaoLaiModal').classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('formDaoTaoLai').reset();
+        }
+
+        function saveDaoTaoLai(event) {
+            event.preventDefault();
+            const template = document.getElementById('templateDaoTaoLai');
+            const clone = template.content.cloneNode(true);
+            const tr = clone.querySelector('tr');
+            const inputs = tr.querySelectorAll('input');
+
+            inputs[0].value = document.getElementById('dtl_loai').value;
+            inputs[1].value = document.getElementById('dtl_batDau').value;
+            inputs[2].value = document.getElementById('dtl_ketThuc').value;
+            inputs[3].value = document.getElementById('dtl_bac').value;
+            inputs[4].value = document.getElementById('dtl_truong').value;
+
+            document.getElementById('tableDaoTaoLai').querySelector('tbody').appendChild(tr);
+            closeDaoTaoLaiModal();
+        }
+
+        // --- Logic cho bảng Khen Thưởng / Kỷ Luật (Bật Modal khi dùng mobile) ---
+        function handleAddKhenKy(tableId, title) {
+            // Nếu là thiết bị di động (chiều rộng <= 768px) thì bật form dạng dọc
+            if (window.innerWidth <= 768) {
+                document.getElementById('kk_tableId').value = tableId;
+                document.getElementById('khenKyModalTitle').innerHTML = `<i class="fas fa-plus-circle mr-2"></i>${title}`;
+                document.getElementById('khenKyModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                // Trên máy tính thì chèn thẳng dòng vào bảng
+                addTableRow(tableId, 'templateKhenKluat');
+            }
+        }
+
+        function closeKhenKyModal() {
+            document.getElementById('khenKyModal').classList.add('hidden');
+            document.body.style.overflow = '';
+            document.getElementById('formKhenKy').reset();
+        }
+
+        function saveKhenKy(event) {
+            event.preventDefault();
+            const tableId = document.getElementById('kk_tableId').value;
+            
+            // Lấy template
+            const template = document.getElementById('templateKhenKluat');
+            const clone = template.content.cloneNode(true);
+            const tr = clone.querySelector('tr');
+            const inputs = tr.querySelectorAll('input');
+
+            // Gán giá trị vào dòng template mới
+            inputs[0].value = document.getElementById('kk_ngay').value;
+            inputs[1].value = document.getElementById('kk_danhGia').value;
+            inputs[2].value = document.getElementById('kk_lyDo').value;
+            inputs[3].value = document.getElementById('kk_loai').value;
+            inputs[4].value = document.getElementById('kk_cap').value;
+
+            // Xử lý chuyển file đính kèm từ modal sang bảng
+            const fileInputModal = document.getElementById('kk_file');
+            if (fileInputModal.files.length > 0) {
+                try {
+                    const dt = new DataTransfer();
+                    for (let i = 0; i < fileInputModal.files.length; i++) {
+                        dt.items.add(fileInputModal.files[i]);
+                    }
+                    inputs[5].files = dt.files;
+                } catch(e) {
+                    console.log("Trình duyệt không hỗ trợ DataTransfer API");
+                }
+            }
+
+            // Thêm vào bảng
+            document.getElementById(tableId).querySelector('tbody').appendChild(tr);
+            closeKhenKyModal();
+        }
+
+        // --- Logic cho bảng Lương (Modal) ---
+        const LUONG_RULES = {
+            defaults: {
+                dienQuanLy: 'Quân lực quản lý',
+                pcChucVu: '0',
+                pcVuotKhung: '0',
+                heSoBaoLuu: '0'
+            },
+            changeTypes: [
+                'Chuyển diện đối tượng',
+                'Chuyển nhóm lương',
+                'Nâng bậc lương đúng hạn',
+                'Nâng bậc lương kéo dài',
+                'Nâng bậc lương trước niên hạn',
+                'Nâng loại/ngạch lương'
+            ],
+            placements: [
+                'Binh sĩ',
+                'Hạ sĩ quan',
+                'Quân nhân chuyên nghiệp',
+                'Công nhân quốc phòng',
+                'Viên chức quốc phòng',
+                'Lao động hợp đồng',
+                'Khác'
+            ],
+            ranksByPlacement: {
+                'Binh sĩ': ['Binh nhì', 'Binh nhất'],
+                'Hạ sĩ quan': ['Hạ sĩ', 'Trung sĩ', 'Thượng sĩ'],
+                'Quân nhân chuyên nghiệp': [
+                    'Thiếu úy QNCN',
+                    'Trung úy QNCN',
+                    'Thượng úy QNCN',
+                    'Đại úy QNCN',
+                    'Thiếu tá QNCN',
+                    'Trung tá QNCN',
+                    'Thượng tá QNCN'
+                ],
+                'Công nhân quốc phòng': ['Không áp dụng'],
+                'Viên chức quốc phòng': ['Không áp dụng'],
+                'Lao động hợp đồng': ['Không áp dụng'],
+                'Khác': ['Không áp dụng']
+            },
+            salaryClasses: {
+                'Sơ cấp': ['Sơ cấp'],
+                'Trung cấp': ['Trung cấp'],
+                'Cao cấp': ['Cao cấp nhóm 2', 'Cao cấp nhóm 1']
+            },
+            salaryTables: {
+                'Cao cấp nhóm 1': [3.85, 4.20, 4.55, 4.90, 5.25, 5.60, 5.95, 6.30, 6.65, 7.00, 7.35, 7.70],
+                'Cao cấp nhóm 2': [3.65, 4.00, 4.35, 4.70, 5.05, 5.40, 5.75, 6.10, 6.45, 6.80, 7.15, 7.50],
+                'Trung cấp': [3.50, 3.80, 4.10, 4.40, 4.70, 5.00, 5.30, 5.60, 5.90, 6.20],
+                'Sơ cấp': [3.20, 3.45, 3.70, 3.95, 4.20, 4.45, 4.70, 4.95, 5.20, 5.45]
+            }
+        };
+
+        function initLuongAutoFill() {
+            fillOptions(document.getElementById('l_loaiThayDoi'), LUONG_RULES.changeTypes, '-- Chọn loại thay đổi --');
+            fillOptions(document.getElementById('l_dienBoTri'), LUONG_RULES.placements, '-- Chọn diện bố trí --');
+            fillOptions(document.getElementById('l_loaiNgach'), Object.keys(LUONG_RULES.salaryClasses), '-- Chọn loại/ngạch --');
+
+            document.getElementById('l_dienBoTri').addEventListener('change', updateRankOptions);
+            document.getElementById('l_loaiNgach').addEventListener('change', updateSalaryGroupOptions);
+            document.getElementById('l_nhom').addEventListener('change', updateSalaryGradeOptions);
+            document.getElementById('l_bac').addEventListener('change', updateSalaryAutoFields);
+            document.getElementById('l_loaiThayDoi').addEventListener('change', applySalaryChangeSuggestion);
+            document.getElementById('l_tuThang').addEventListener('change', updateSalaryAutoFields);
+            document.getElementById('l_tnBatDau').addEventListener('change', updateSalaryAutoFields);
+
+            updateRankOptions();
+            updateSalaryGroupOptions();
+        }
+
+        function fillOptions(selectEl, values, placeholder = '', selectedValue = '') {
+            const currentValue = selectedValue || selectEl.value;
+            selectEl.innerHTML = placeholder ? `<option value="">${placeholder}</option>` : '';
+            values.forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                selectEl.appendChild(option);
+            });
+            selectEl.value = values.includes(currentValue) ? currentValue : '';
+        }
+
+        function setSelectValue(selectEl, value) {
+            if (!value) {
+                selectEl.value = '';
+                return;
+            }
+
+            const hasOption = Array.from(selectEl.options).some(option => option.value === value);
+            if (!hasOption) {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                selectEl.appendChild(option);
+            }
+            selectEl.value = value;
+        }
+
+        function updateRankOptions() {
+            const placement = document.getElementById('l_dienBoTri').value;
+            const ranks = LUONG_RULES.ranksByPlacement[placement] || [];
+            fillOptions(document.getElementById('l_capBac'), ranks, ranks.length ? '-- Chọn cấp bậc --' : '-- Chọn diện bố trí trước --');
+            document.getElementById('l_pcCVu').value = LUONG_RULES.defaults.pcChucVu;
+        }
+
+        function updateSalaryGroupOptions() {
+            const salaryClass = document.getElementById('l_loaiNgach').value;
+            const groups = LUONG_RULES.salaryClasses[salaryClass] || [];
+            fillOptions(document.getElementById('l_nhom'), groups, groups.length ? '-- Chọn nhóm --' : '-- Chọn loại/ngạch trước --');
+            updateSalaryGradeOptions();
+        }
+
+        function updateSalaryGradeOptions() {
+            const group = document.getElementById('l_nhom').value;
+            const coefficients = LUONG_RULES.salaryTables[group] || [];
+            const grades = coefficients.map((_, index) => String(index + 1));
+            fillOptions(document.getElementById('l_bac'), grades, grades.length ? '-- Chọn bậc --' : '-- Chọn nhóm trước --');
+            updateSalaryAutoFields();
+        }
+
+        function updateSalaryAutoFields() {
+            ['l_tuThang', 'l_tnBatDau'].forEach(id => {
+                const input = document.getElementById(id);
+                input.value = normalizeMonthYear(input.value);
+            });
+
+            const group = document.getElementById('l_nhom').value;
+            const grade = Number(document.getElementById('l_bac').value);
+            const coefficients = LUONG_RULES.salaryTables[group] || [];
+            const coefficient = coefficients[grade - 1];
+
+            document.getElementById('l_heSo').value = coefficient ? coefficient.toFixed(2) : '';
+            document.getElementById('l_pcVK').value = calculateBeyondFramePercent(group, grade);
+            document.getElementById('l_pcCVu').value = LUONG_RULES.defaults.pcChucVu;
+
+            const startMonth = document.getElementById('l_tnBatDau');
+            if (!startMonth.value) startMonth.value = document.getElementById('l_tuThang').value;
+        }
+
+        function calculateBeyondFramePercent(group, grade) {
+            const coefficients = LUONG_RULES.salaryTables[group] || [];
+            const startMonth = document.getElementById('l_tnBatDau').value || document.getElementById('l_tuThang').value;
+            if (!coefficients.length || grade !== coefficients.length || !startMonth) return LUONG_RULES.defaults.pcVuotKhung;
+
+            const monthsAtMaxGrade = monthDiff(startMonth, new Date());
+            if (monthsAtMaxGrade < 36) return LUONG_RULES.defaults.pcVuotKhung;
+            return String(5 + Math.floor((monthsAtMaxGrade - 36) / 12));
+        }
+
+        function monthDiff(fromMonth, toDate) {
+            const parsed = parseMonthYear(fromMonth);
+            if (!parsed) return 0;
+            return (toDate.getFullYear() - parsed.year) * 12 + (toDate.getMonth() + 1 - parsed.month);
+        }
+
+        function monthYearKey(value) {
+            const parsed = parseMonthYear(value);
+            return parsed ? parsed.year * 12 + parsed.month : -1;
+        }
+
+        function applyLuongDefaults() {
+            document.getElementById('l_dienQuanLy').value = LUONG_RULES.defaults.dienQuanLy;
+            document.getElementById('l_heSoBL').value = LUONG_RULES.defaults.heSoBaoLuu;
+            document.getElementById('l_pcVK').value = LUONG_RULES.defaults.pcVuotKhung;
+            document.getElementById('l_pcCVu').value = LUONG_RULES.defaults.pcChucVu;
+        }
+
+        function getLatestLuongValues() {
+            const rows = Array.from(document.querySelectorAll('#tbodyLuong .luong-row'));
+            const ids = [
+                'l_tuThang', 'l_denThang', 'l_donVi1', 'l_donVi2', 'l_loaiThayDoi',
+                'l_dienQuanLy', 'l_dienBoTri', 'l_capBac', 'l_chucVu', 'l_tnDamNhan',
+                'l_loaiNgach', 'l_nhom', 'l_bac', 'l_heSo', 'l_pcVK', 'l_heSoBL',
+                'l_pcCVu', 'l_pcTNNghe', 'l_tnBatDau'
+            ];
+
+            const records = rows
+                .map((row, rowIndex) => {
+                    const inputs = row.querySelectorAll('input');
+                    const values = ids.reduce((result, id, index) => {
+                        result[id] = normalizeMonthYear(inputs[index]?.value || '');
+                        return result;
+                    }, {});
+                    const filled = Object.values(values).some(value => String(value).trim() !== '');
+                    const sortKey = Math.max(monthYearKey(values.l_denThang), monthYearKey(values.l_tuThang));
+                    return { values, filled, sortKey, rowIndex };
+                })
+                .filter(record => record.filled);
+
+            if (!records.length) return null;
+
+            records.sort((a, b) => (b.sortKey - a.sortKey) || (b.rowIndex - a.rowIndex));
+            return records[0].values;
+        }
+
+        function applyLatestLuongValues() {
+            const values = getLatestLuongValues();
+            if (!values) {
+                window.latestLuongSuggestion = null;
+                updateLuongSuggestion(null);
+                return;
+            }
+
+            ['l_donVi1', 'l_donVi2', 'l_dienQuanLy', 'l_chucVu', 'l_tnDamNhan', 'l_heSoBL', 'l_pcTNNghe', 'l_tnBatDau'].forEach(id => {
+                document.getElementById(id).value = values[id] || document.getElementById(id).value;
+            });
+
+            setSelectValue(document.getElementById('l_dienBoTri'), values.l_dienBoTri);
+            updateRankOptions();
+            setSelectValue(document.getElementById('l_capBac'), values.l_capBac);
+            setSelectValue(document.getElementById('l_loaiNgach'), values.l_loaiNgach);
+            updateSalaryGroupOptions();
+            setSelectValue(document.getElementById('l_nhom'), values.l_nhom);
+            updateSalaryGradeOptions();
+            setSelectValue(document.getElementById('l_bac'), values.l_bac);
+
+            if (values.l_denThang) document.getElementById('l_tuThang').value = values.l_denThang;
+            updateSalaryAutoFields();
+            updateLuongSuggestion(values);
+            window.latestLuongSuggestion = values;
+        }
+
+        function applySalaryChangeSuggestion() {
+            const changeType = document.getElementById('l_loaiThayDoi').value;
+            const latest = window.latestLuongSuggestion;
+            if (!latest || !changeType.includes('Nâng bậc')) {
+                updateSalaryAutoFields();
+                return;
+            }
+
+            const currentGrade = Number(latest.l_bac);
+            const group = latest.l_nhom || document.getElementById('l_nhom').value;
+            const maxGrade = (LUONG_RULES.salaryTables[group] || []).length;
+            if (!currentGrade || !maxGrade || currentGrade >= maxGrade) {
+                updateSalaryAutoFields();
+                return;
+            }
+
+            setSelectValue(document.getElementById('l_nhom'), group);
+            updateSalaryGradeOptions();
+            setSelectValue(document.getElementById('l_bac'), String(currentGrade + 1));
+            updateSalaryAutoFields();
+            updateLuongSuggestion({
+                ...latest,
+                l_bac: String(currentGrade + 1),
+                l_heSo: document.getElementById('l_heSo').value,
+                l_pcVK: document.getElementById('l_pcVK').value
+            }, 'Gợi ý nâng bậc từ bản ghi gần nhất');
+        }
+
+        function updateLuongSuggestion(values, title = 'Đã gợi ý từ bản ghi lương gần nhất') {
+            const box = document.getElementById('luongSuggestion');
+            if (!box) return;
+
+            if (!values) {
+                box.classList.add('hidden');
+                box.textContent = '';
+                return;
+            }
+
+            const parts = [
+                ['Cấp bậc', document.getElementById('l_capBac').value || values.l_capBac],
+                ['Loại/ngạch', document.getElementById('l_loaiNgach').value || values.l_loaiNgach],
+                ['Nhóm', document.getElementById('l_nhom').value || values.l_nhom],
+                ['Bậc', document.getElementById('l_bac').value || values.l_bac],
+                ['Hệ số', document.getElementById('l_heSo').value || values.l_heSo],
+                ['PC VK', document.getElementById('l_pcVK').value || values.l_pcVK],
+                ['Hệ số BL', document.getElementById('l_heSoBL').value || values.l_heSoBL]
+            ].filter(([, value]) => value);
+
+            box.innerHTML = `<div class="font-semibold mb-1">${title}</div>${parts.map(([label, value]) => `<span class="inline-block mr-4">${label}: <strong>${escapeAttr(value)}</strong></span>`).join('')}`;
+            box.classList.remove('hidden');
+        }
+
+        function escapeAttr(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function openLuongModal() {
+            document.getElementById('formThemLuong').reset();
+            fillOptions(document.getElementById('l_loaiThayDoi'), LUONG_RULES.changeTypes, '-- Chọn loại thay đổi --');
+            fillOptions(document.getElementById('l_dienBoTri'), LUONG_RULES.placements, '-- Chọn diện bố trí --');
+            fillOptions(document.getElementById('l_loaiNgach'), Object.keys(LUONG_RULES.salaryClasses), '-- Chọn loại/ngạch --');
+            updateRankOptions();
+            updateSalaryGroupOptions();
+            applyLuongDefaults();
+            applyLatestLuongValues();
+            document.getElementById('luongModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLuongModal() {
+            document.getElementById('luongModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function saveLuong(event) {
+            if(event) event.preventDefault();
+            
+            const ids = [
+                'l_tuThang', 'l_denThang', 'l_donVi1', 'l_donVi2', 'l_loaiThayDoi', 
+                'l_dienQuanLy', 'l_dienBoTri', 'l_capBac', 'l_chucVu', 'l_tnDamNhan', 
+                'l_loaiNgach', 'l_nhom', 'l_bac', 'l_heSo', 'l_pcVK', 'l_heSoBL', 
+                'l_pcCVu', 'l_pcTNNghe', 'l_tnBatDau'
+            ];
+            
+            const tr = document.createElement('tr');
+            tr.className = 'border-b bg-white hover:bg-blue-50 transition-colors luong-row';
+            
+            let tds = `<td class="p-2 border text-center stt-column font-medium text-gray-500"></td>`;
+            
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el.dataset.monthYear !== undefined) {
+                    el.value = normalizeMonthYear(el.value);
+                }
+                const val = el.value;
+                const type = el.tagName === 'SELECT' ? 'text' : el.type;
+                let stepStr = el.step ? `step="${el.step}"` : '';
+                const monthYearAttr = el.dataset.monthYear !== undefined
+                    ? ' inputmode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\\/[0-9]{4}" data-month-year'
+                    : '';
+                tds += `<td class="p-1 border"><input type="${type}" value="${escapeAttr(val)}"${monthYearAttr} ${stepStr} class="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"></td>`;
+            });
+            
+            tds += `<td class="p-1 border text-center">
+                        <button type="button" onclick="removeLuongRow(this)" class="text-red-500 hover:text-red-700 bg-red-50 p-1 rounded" title="Xóa dòng"><i class="fas fa-trash"></i></button>
+                    </td>`;
+                    
+            tr.innerHTML = tds;
+            
+            document.getElementById('tbodyLuong').appendChild(tr);
+            updateSalaryIndices();
+            
+            document.getElementById('formThemLuong').reset();
+            closeLuongModal();
+        }
+
+        // Xóa dòng và cập nhật lại STT của bảng lương
+        function removeLuongRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            updateSalaryIndices();
+        }
+
+        // Cập nhật số thứ tự (STT) trong bảng lương
+        function updateSalaryIndices() {
+            const rows = document.querySelectorAll('#tbodyLuong .luong-row');
+            rows.forEach((row, index) => {
+                row.querySelector('.stt-column').textContent = index + 1;
+            });
+        }
+    </script>
+</body>
+</html>

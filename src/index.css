@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* Custom scrollbar for wide tables */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+.table-container::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}
+.table-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1; 
+    border-radius: 4px;
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; 
+}
+
+/* Sticky headers for tables */
+th {
+    position: sticky;
+    top: 0;
+    background-color: #f8fafc;
+    z-index: 10;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important; /* Ngăn iOS tự động zoom khi tap vào ô nhập liệu */
+    }
+    td input, td select {
+        min-height: 40px; /* Tăng chiều cao vùng chạm trong bảng */
+        padding: 8px 4px !important;
+    }
+    /* CSS cho bảng dọc trên mobile */
+    .mobile-vertical-table table, .mobile-vertical-table tbody, .mobile-vertical-table tr { display: block; width: 100%; }
+    .mobile-vertical-table thead { display: none; }
+    .mobile-vertical-table tr { border: 1px solid #cbd5e1; margin-bottom: 1rem; border-radius: 0.5rem; background: #ffffff; padding: 0.5rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .mobile-vertical-table td { 
+        display: flex; 
+        flex-direction: column; 
+        border: none !important;
+        padding: 0.5rem !important;
+        border-bottom: 1px dashed #e2e8f0 !important;
+        text-align: left !important;
+    }
+    .mobile-vertical-table td:last-child { border-bottom: none !important; }
+    .mobile-vertical-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: #475569;
+        margin-bottom: 0.25rem;
+    }
+}
+
+.scroll-hint {
+    animation: pulse-text 2.5s infinite;
+}
+@keyframes pulse-text {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
