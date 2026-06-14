@@ -26,9 +26,11 @@ export default function PersonnelDetail() {
     const { currentUser } = useAuth();
     const pdfRef = useRef(null);
     const pdfFormRef = useRef(null);
+    const pdfLuongRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
     const [isExportingForm, setIsExportingForm] = useState(false);
+    const [isExportingLuong, setIsExportingLuong] = useState(false);
     const [data, setData] = useState({
         hoSo: null,
         daoTao: [],
@@ -543,6 +545,49 @@ export default function PersonnelDetail() {
         document.body.removeChild(downloadLink);
     };
 
+    const handleExportLuongTable = async () => {
+        if (!window.confirm("Bạn có chắc muốn xuất Bảng quá trình công tác và hưởng lương không?")) return;
+        if (isExportingLuong) return;
+        setIsExportingLuong(true);
+        const unpatch = patchHtml2Canvas();
+        try {
+            const element = pdfLuongRef.current;
+            if (!element) throw new Error("Không tìm thấy dữ liệu.");
+            
+            const parent = element.parentElement;
+            parent.classList.remove('hidden');
+
+            const opt = {
+                margin: [10, 10, 10, 10], 
+                filename: `BangLuong_${data?.hoSo?.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}_${Date.now()}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
+            };
+
+            const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+            
+            const fileName = opt.filename;
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+            
+            parent.classList.add('hidden');
+        } catch (error) {
+            console.error('Lỗi khi xuất PDF Bảng lương:', error);
+            alert('Có lỗi xảy ra: ' + (error.message || JSON.stringify(error)));
+        } finally {
+            unpatch();
+            setIsExportingLuong(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -643,6 +688,11 @@ export default function PersonnelDetail() {
                         {currentUser?.role === 'admin' && (
                             <button onClick={handleExportWordForm} className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 bg-green-600 rounded-lg text-white hover:bg-green-700 shadow-md font-medium transition-colors flex items-center text-sm sm:text-base">
                                 <i className="fas fa-file-word mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Xuất Word Form</span><span className="sm:hidden">Xuất Word</span>
+                            </button>
+                        )}
+                        {currentUser && currentUser.role === 'admin' && (
+                            <button onClick={handleExportLuongTable} disabled={isExportingLuong} className={`flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 rounded-lg text-white shadow-md font-medium transition-colors flex items-center text-sm sm:text-base ${isExportingLuong ? 'bg-orange-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}>
+                                {isExportingLuong ? <><i className="fas fa-spinner fa-spin mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Đang xuất Bảng lương...</span><span className="sm:hidden">Đang xuất</span></> : <><i className="fas fa-file-invoice-dollar mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Xuất Bảng Lương</span><span className="sm:hidden">Xuất Lương</span></>}
                             </button>
                         )}
                         <button onClick={handleExportPDFForm} disabled={isExportingForm} className={`flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 rounded-lg text-white shadow-md font-medium transition-colors flex items-center text-sm sm:text-base ${isExportingForm ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
@@ -1096,6 +1146,53 @@ export default function PersonnelDetail() {
             <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
                 <div ref={pdfFormRef} id="pdf-form-content" className="bg-white pdf-form-mode" style={{ width: '196mm', minHeight: '283mm', color: '#000' }}>
                     <PrintForm data={data} />
+                </div>
+                
+                {/* Bảng lương để in */}
+                <div ref={pdfLuongRef} className="p-8 bg-white text-black" style={{ width: '297mm', color: 'black', boxSizing: 'border-box' }}>
+                    <h1 className="text-center text-2xl font-bold uppercase mb-4">BẢNG QUÁ TRÌNH CÔNG TÁC VÀ HƯỞNG LƯƠNG</h1>
+                    <div className="flex justify-between mb-6 text-lg">
+                        <p><span className="font-bold">Họ và tên:</span> {hoSo?.ho_ten_khai_sinh}</p>
+                        <p><span className="font-bold">Đơn vị:</span> {hoSo?.don_vi}</p>
+                    </div>
+                    <table className="w-full text-sm text-left border-collapse" style={{ border: '1px solid black' }}>
+                        <thead className="bg-gray-100" style={{ backgroundColor: '#f3f4f6' }}>
+                            <tr>
+                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black' }}>STT</th>
+                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black' }}>Thời gian</th>
+                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black' }}>Đơn vị công tác</th>
+                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black' }}>Cấp bậc / Chức vụ</th>
+                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black' }}>Ngạch/Bậc</th>
+                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black' }}>Hệ số</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {luong && luong.map((l, index) => (
+                                <tr key={l.id}>
+                                    <td className="px-2 py-3 text-center border" style={{ border: '1px solid black' }}>{index + 1}</td>
+                                    <td className="px-2 py-3 border" style={{ border: '1px solid black' }}>{l.tu_thang || ''} - {l.den_thang || 'Nay'}</td>
+                                    <td className="px-2 py-3 border" style={{ border: '1px solid black' }}>
+                                        <p className="font-bold">{l.don_vi_cap_truc_thuoc || '-'}</p>
+                                        <p>{l.don_vi_chi_tiet || '-'}</p>
+                                    </td>
+                                    <td className="px-2 py-3 border" style={{ border: '1px solid black' }}>
+                                        <p className="font-bold">{l.chuc_vu_cnqs || '-'}</p>
+                                        <p>{l.cap_bac || '-'} {l.loai_thay_doi ? `(${l.loai_thay_doi})` : ''}</p>
+                                    </td>
+                                    <td className="px-2 py-3 text-center border" style={{ border: '1px solid black' }}>
+                                        <span>{l.loai_ngach || '-'}</span><br/>
+                                        <span>{l.bac || '-'}/{l.nhom || '-'}</span>
+                                    </td>
+                                    <td className="px-2 py-3 text-center font-bold border" style={{ border: '1px solid black' }}>{l.he_so ? l.he_so.toFixed(2) : '-'}</td>
+                                </tr>
+                            ))}
+                            {(!luong || luong.length === 0) && (
+                                <tr>
+                                    <td colSpan="6" className="px-2 py-4 text-center italic border" style={{ border: '1px solid black' }}>Chưa có quá trình công tác.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
