@@ -40,11 +40,15 @@ export default function PrintForm({ data }) {
                 .field-group { display: flex; align-items: flex-start; margin-bottom: 4px; min-width: 0; }
                 .field-label { font-weight: bold; margin-right: 5px; white-space: nowrap; line-height: 1.25; }
                 .field-value { flex: 1 1 0; border-bottom: 0.6px dotted #000; min-height: 20px; padding: 3px 4px 3pt; line-height: 1.15; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
-                table { width: 100% !important; border-collapse: collapse !important; margin-top: 4px; margin-bottom: 10px; font-size: 11px !important; line-height: 1.35 !important; table-layout: fixed !important; overflow-wrap: anywhere; word-break: break-word; }
+                table { width: 100% !important; border-collapse: collapse !important; margin-top: 4px; margin-bottom: 10px; font-size: 11px !important; line-height: 1.35 !important; table-layout: fixed !important; overflow-wrap: anywhere; word-break: break-word; page-break-inside: auto; break-inside: auto; }
+                tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+                thead { display: table-header-group; }
+                tfoot { display: table-footer-group; }
                 th, td { border: 0.5pt solid #000 !important; padding: 7px 5px !important; vertical-align: middle !important; overflow: visible; text-overflow: clip; white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; }
                 th { background-color: #f7f7f7; font-weight: bold; text-align: center !important; vertical-align: middle !important; }
                 td { text-align: left !important; }
                 .overflow-x-auto { overflow: visible !important; }
+                .print-break-avoid { page-break-inside: avoid; break-inside: avoid; }
                 .salary-table { font-size: 6.2px !important; line-height: 1.25 !important; }
                 .salary-table th, .salary-table td { padding: 3px !important; }
                 .bold { font-weight: bold; }
