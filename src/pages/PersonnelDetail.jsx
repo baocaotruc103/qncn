@@ -9,6 +9,7 @@ import TabKhenKyLuat from '../components/TabKhenKyLuat';
 import TabNhanDang from '../components/TabNhanDang';
 import TabLuong from '../components/TabLuong';
 import PrintForm from '../components/PrintForm';
+import { useAuth } from '../contexts/authContextBase';
 
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -22,6 +23,7 @@ const formatDate = (dateStr) => {
 export default function PersonnelDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
     const pdfRef = useRef(null);
     const pdfFormRef = useRef(null);
     const [loading, setLoading] = useState(true);
@@ -501,6 +503,11 @@ export default function PersonnelDetail() {
                         <button onClick={() => navigate(`/personnel/edit/${id}`)} className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 bg-yellow-500 rounded-lg text-white hover:bg-yellow-600 shadow-md font-medium transition-colors flex items-center text-sm sm:text-base">
                             <i className="fas fa-edit mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Sửa hồ sơ</span><span className="sm:hidden">Sửa hồ sơ</span>
                         </button>
+                        {currentUser?.role === 'admin' && (
+                            <button onClick={handleExportWordForm} className="flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 bg-green-600 rounded-lg text-white hover:bg-green-700 shadow-md font-medium transition-colors flex items-center text-sm sm:text-base">
+                                <i className="fas fa-file-word mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Xuất Word Form</span><span className="sm:hidden">Xuất Word</span>
+                            </button>
+                        )}
                         <button onClick={handleExportPDFForm} disabled={isExportingForm} className={`flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2 rounded-lg text-white shadow-md font-medium transition-colors flex items-center text-sm sm:text-base ${isExportingForm ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
                             {isExportingForm ? <><i className="fas fa-spinner fa-spin mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Đang xuất PDF Form...</span><span className="sm:hidden">Đang xuất</span></> : <><i className="fas fa-file-invoice mr-1.5 sm:mr-2"></i> <span className="hidden sm:inline">Xuất PDF Form</span><span className="sm:hidden">Xuất Form</span></>}
                         </button>
