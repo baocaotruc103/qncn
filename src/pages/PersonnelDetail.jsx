@@ -415,6 +415,68 @@ export default function PersonnelDetail() {
             return;
         }
         
+        const clone = element.cloneNode(true);
+        const grids = clone.querySelectorAll('.grid');
+        grids.forEach(grid => {
+            const container = document.createElement('div');
+            
+            let currentTable = document.createElement('table');
+            currentTable.style.width = '100%';
+            currentTable.style.borderCollapse = 'collapse';
+            currentTable.style.border = 'none';
+            currentTable.style.marginBottom = '5px';
+            let tr = document.createElement('tr');
+            let currentCols = 0;
+            
+            Array.from(grid.children).forEach(child => {
+                let span = 12;
+                const match = child.className.match(/col-span-(\d+)/);
+                if (match) span = parseInt(match[1]);
+                
+                if (currentCols > 0 && currentCols + span > 12) {
+                    currentTable.appendChild(tr);
+                    container.appendChild(currentTable);
+                    
+                    currentTable = document.createElement('table');
+                    currentTable.style.width = '100%';
+                    currentTable.style.borderCollapse = 'collapse';
+                    currentTable.style.border = 'none';
+                    currentTable.style.marginBottom = '5px';
+                    tr = document.createElement('tr');
+                    currentCols = 0;
+                }
+                
+                const td = document.createElement('td');
+                td.style.width = `${(span / 12) * 100}%`;
+                td.style.verticalAlign = 'bottom';
+                td.style.padding = '4px 8px 4px 0';
+                td.style.border = 'none';
+                
+                if (child.classList.contains('field-group')) {
+                    const label = child.querySelector('.field-label');
+                    const value = child.querySelector('.field-value');
+                    if (label) {
+                        label.style.fontWeight = 'bold';
+                        label.style.display = 'inline';
+                    }
+                    if (value) {
+                        value.style.display = 'inline';
+                        value.style.borderBottom = '1px dotted black';
+                    }
+                }
+                td.innerHTML = child.innerHTML;
+                tr.appendChild(td);
+                currentCols += span;
+            });
+            
+            if (currentCols > 0) {
+                currentTable.appendChild(tr);
+                container.appendChild(currentTable);
+            }
+            
+            grid.parentNode.replaceChild(container, grid);
+        });
+
         const htmlContent = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head>
@@ -423,7 +485,7 @@ export default function PersonnelDetail() {
                 <style>
                     body { font-family: "Times New Roman", Times, serif; font-size: 12pt; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
-                    th, td { border: 1px dotted black; padding: 5px; text-align: left; vertical-align: top; }
+                    th, td { border: 1px solid black; padding: 5px; text-align: left; vertical-align: top; }
                     th { font-weight: bold; background-color: #f7f7f7; text-align: center; border-style: solid; }
                     .section-title { font-size: 14pt; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid black; margin-top: 15px; margin-bottom: 10px; padding-bottom: 2px; }
                     .field-group { margin-bottom: 5px; }
@@ -437,7 +499,7 @@ export default function PersonnelDetail() {
                 </style>
             </head>
             <body>
-                ${element.innerHTML}
+                ${clone.innerHTML}
             </body>
             </html>
         `;

@@ -74,9 +74,9 @@ export default function PrintForm({ data }) {
             <div className="col-span-6 field-group"><span className="field-label">4. Tháng năm vào quân đội:</span><span className="field-value">{hoSo.thang_nam_vao_quan_doi || ""}</span></div>
             <div className="col-span-6 field-group"><span className="field-label">7. Nhóm máu:</span><span className="field-value">{hoSo.nhom_mau || ""}</span></div>
 
-            <div className="col-span-4 field-group"><span className="field-label">5. Số CMQNCN:</span><span className="field-value">{hoSo.so_cmqncn || ""}</span></div>
-            <div className="col-span-4 field-group"><span className="field-label">5.1 Ngày cấp:</span><span className="field-value">{formatDate(hoSo.ngay_cap_cmqncn)}</span></div>
-            <div className="col-span-4 field-group"><span className="field-label">5.2 Nơi cấp:</span><span className="field-value">{hoSo.noi_cap_cmqncn || ""}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">5. Số CMQNCN:</span><span className="field-value">{hoSo.so_cmqncn_cmsq || hoSo.so_cmqncn || ""}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">5.1 Ngày cấp:</span><span className="field-value">{formatDate(hoSo.ngay_cap_cmqncn_cmsq || hoSo.ngay_cap_cmqncn)}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">5.2 Nơi cấp:</span><span className="field-value">{hoSo.noi_cap_cmqncn_cmsq || hoSo.noi_cap_cmqncn || ""}</span></div>
 
             <div className="col-span-4 field-group"><span className="field-label">8. Số CCCD:</span><span className="field-value">{hoSo.so_cccd || ""}</span></div>
             <div className="col-span-4 field-group"><span className="field-label">8.1 Ngày cấp:</span><span className="field-value">{formatDate(hoSo.ngay_cap_cccd)}</span></div>
