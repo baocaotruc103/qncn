@@ -39,7 +39,7 @@ export default function PrintForm({ data }) {
                 .section-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #333; margin-top: 10px; margin-bottom: 7px; padding-bottom: 2px; }
                 .field-group { display: flex; align-items: flex-start; margin-bottom: 4px; min-width: 0; }
                 .field-label { font-weight: bold; margin-right: 5px; white-space: nowrap; line-height: 1.25; }
-                .field-value { flex: 1 1 0; border-bottom: 0.6px dotted #000; min-height: 20px; padding: 3px 4px 0; line-height: 1.15; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+                .field-value { flex: 1 1 0; border-bottom: 0.6px dotted #000; min-height: 20px; padding: 3px 4px 3pt; line-height: 1.15; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
                 table { width: 100% !important; border-collapse: collapse !important; margin-top: 4px; margin-bottom: 10px; font-size: 11px !important; line-height: 1.35 !important; table-layout: fixed !important; overflow-wrap: anywhere; word-break: break-word; }
                 th, td { border: 0.5pt solid #000 !important; padding: 7px 5px !important; vertical-align: middle !important; overflow: visible; text-overflow: clip; white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; }
                 th { background-color: #f7f7f7; font-weight: bold; text-align: center !important; vertical-align: middle !important; }
@@ -92,7 +92,7 @@ export default function PrintForm({ data }) {
 
             <div className="col-span-12 field-group mt-2"><span className="field-label italic underline">Nơi ở hiện tại:</span></div>
             <div className="col-span-12 field-group"><span className="field-label">17. Xã/Phường, Tỉnh/Thành:</span><span className="field-value">{hoSo.noi_o_hien_tai || ""}</span></div>
-            <div className="col-span-12 field-group"><span className="field-label">18. Chi tiết:</span><span className="field-value">{hoSo.noi_o_chi_tiet || ""}</span></div>
+            <div className="col-span-12 field-group"><span className="field-label">18. Chi tiết:</span><span className="field-value">{field(hoSo, ['noi_o_hien_tai_chi_tiet', 'noi_o_chi_tiet'])}</span></div>
         </div>
 
         
