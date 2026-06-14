@@ -661,7 +661,7 @@ export default function PersonnelDetail() {
                             <i className="fas fa-shield-alt" style={{ fontSize: '12rem' }}></i>
                         </div>
                         <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-widest relative z-10 text-white drop-shadow-md">
-                            HỒ SƠ QUÂN NHÂN
+                            THÔNG TIN QUÂN NHÂN
                         </h1>
                     </div>
 
@@ -701,6 +701,10 @@ export default function PersonnelDetail() {
                                     <li className="flex justify-between border-b border-gray-50 pb-2">
                                         <span className="font-medium text-gray-500">Hôn nhân</span>
                                         <span className="text-gray-900 font-medium">{hoSo.tinh_trang_hon_nhan || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Khối quân</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.khoi_quan || '-'}</span>
                                     </li>
                                     <li className="flex justify-between border-b border-gray-50 pb-2">
                                         <span className="font-medium text-gray-500">Ngoại ngữ</span>
@@ -805,18 +809,19 @@ export default function PersonnelDetail() {
                                         <div className="absolute -left-8 bg-blue-600 h-4 w-4 rounded-full border-4 border-white shadow"></div>
                                         <h3 className="font-bold text-gray-800 mb-1">Cột mốc Quân đội</h3>
                                         <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-1">
+                                            <div>Tháng năm VQĐ: <span className="text-gray-900 font-medium">{hoSo.thang_nam_vao_quan_doi || '-'}</span></div>
                                             <div>Tuyển dụng: <span className="text-gray-900 font-medium">{hoSo.tn_tuyen_dung || '-'}</span></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-1">
                                             <div>Nhập ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_nhap_ngu || '-'}</span></div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-1">
                                             <div>Xuất ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_xuat_ngu || '-'}</span></div>
-                                            <div>Tái ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_tai_ngu || '-'}</span></div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-1">
+                                            <div>Tái ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_tai_ngu || '-'}</span></div>
                                             <div>HSQ-BS sang QNCN: <span className="text-gray-900 font-medium">{hoSo.tn_hsq_bs_sang_qncn || '-'}</span></div>
-                                            <div>HSQ-BS sang CNVQP: <span className="text-gray-900 font-medium">{hoSo.tn_hsq_bs_sang_cnvqp || '-'}</span></div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500">
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-1">
+                                            <div>HSQ-BS sang CNVQP: <span className="text-gray-900 font-medium">{hoSo.tn_hsq_bs_sang_cnvqp || '-'}</span></div>
                                             <div>CNVQP sang QNCN: <span className="text-gray-900 font-medium">{hoSo.tn_cnvqp_sang_qncn || '-'}</span></div>
                                         </div>
                                     </div>
@@ -846,8 +851,20 @@ export default function PersonnelDetail() {
                                         <h3 className="font-bold text-blue-900 text-lg">{hoSo.trinh_do_dao_tao_cao_nhat || 'Chưa cập nhật'} - {hoSo.nganh_nghe_cao_nhat || ''}</h3>
                                         <span className="bg-blue-200 text-blue-800 text-xs font-bold px-3 py-1 rounded-full w-max">Trình độ cao nhất</span>
                                     </div>
-                                    <p className="text-sm text-gray-600"><i className="fas fa-calendar-check mr-2 opacity-50"></i>Năm tốt nghiệp: {hoSo.nam_tot_nghiep || '-'}</p>
+                                    <div className="flex gap-4 text-sm text-gray-600">
+                                        <p><i className="fas fa-calendar-check mr-2 opacity-50"></i>Năm tốt nghiệp: {hoSo.nam_tot_nghiep || '-'}</p>
+                                        <p><i className="fas fa-book mr-2 opacity-50"></i>Trình độ văn hóa: {hoSo.trinh_do_van_hoa || '-'}</p>
+                                    </div>
                                 </div>
+                                
+                                {hoSo.trinh_do_lien_quan_cnqs && (
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
+                                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
+                                            <h3 className="font-bold text-gray-800 text-lg">{hoSo.trinh_do_lien_quan_cnqs} - {hoSo.nganh_nghe_lien_quan_cnqs || ''}</h3>
+                                            <span className="bg-gray-200 text-gray-700 text-xs font-bold px-3 py-1 rounded-full w-max">Liên quan CNQS</span>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <h4 className="font-semibold text-gray-700 text-sm mb-2 mt-4">Thông tin đào tạo lại / Bổ túc</h4>
                                 {daoTao.length > 0 ? (
@@ -943,38 +960,49 @@ export default function PersonnelDetail() {
                                 </div>
                             </div>
 
-                            <div className="print-break-avoid">
+                            <div className="print-break-avoid" style={{ pageBreakBefore: 'always' }}>
                                 <h2 className="text-xl font-bold text-gray-800 border-b-2 border-gray-100 pb-2 mb-5 flex items-center uppercase tracking-wide mt-8">
                                     <i className="fas fa-users text-blue-600 mr-2"></i> Quan hệ gia đình
                                 </h2>
                                 
                                 {giaDinh.length > 0 ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {giaDinh.map((gd) => {
-                                            const isDead = gd.trang_thai === 'Đã mất';
-                                            return (
-                                                <div key={gd.id} className={`border border-gray-200 p-3 rounded-xl hover:shadow-md transition-shadow ${isDead ? 'opacity-75' : ''}`}>
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <h4 className={`font-bold text-gray-800 text-sm ${isDead ? 'line-through' : ''}`}>{gd.ho_ten || '-'}</h4>
-                                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${gd.moi_quan_he === 'Vợ (chồng)' ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-600'}`}>{gd.moi_quan_he || '-'}</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 mb-1">
-                                                        <div>Sinh: <span className="text-gray-900 font-medium">{gd.nam_sinh || '-'}</span></div>
-                                                        <div className="text-gray-900 font-medium">{gd.nghe_nghiep || '-'}</div>
-                                                        <div className={isDead ? 'text-red-500 font-medium' : 'text-green-600 font-medium'}>
-                                                            {isDead ? `Đã mất (${gd.nam_chet || ''})` : 'Còn sống'}
-                                                        </div>
-                                                    </div>
-                                                    {gd.so_dien_thoai && <p className="text-xs text-gray-600 mb-1"><i className="fas fa-phone mr-1 opacity-50"></i>{gd.so_dien_thoai}</p>}
-                                                    {(gd.noi_o_chi_tiet || gd.noi_o_hien_tai) && (
-                                                        <p className="text-xs text-gray-600">
-                                                            <i className="fas fa-home mr-1 opacity-50"></i>
-                                                            {[gd.noi_o_chi_tiet, gd.noi_o_hien_tai].filter(Boolean).join(', ')}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
+                                    <div className="overflow-x-auto custom-scrollbar border rounded-lg">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-gray-50 text-gray-600">
+                                                <tr>
+                                                    <th className="px-4 py-2 font-medium">Mối quan hệ</th>
+                                                    <th className="px-4 py-2 font-medium">Họ và tên</th>
+                                                    <th className="px-4 py-2 font-medium">Năm sinh</th>
+                                                    <th className="px-4 py-2 font-medium">Nghề nghiệp</th>
+                                                    <th className="px-4 py-2 font-medium">Trạng thái</th>
+                                                    <th className="px-4 py-2 font-medium">Nơi ở</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {giaDinh.map((gd) => {
+                                                    const isDead = gd.trang_thai === 'Đã mất' || gd.trang_thai === 'Đã chết';
+                                                    return (
+                                                        <tr key={gd.id} className={`border-t border-gray-100 ${isDead ? 'opacity-75 bg-gray-50' : 'bg-white'}`}>
+                                                            <td className="px-4 py-3 font-bold">{gd.moi_quan_he || '-'}</td>
+                                                            <td className={`px-4 py-3 ${isDead ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                                                                {gd.ho_ten || '-'} 
+                                                                {gd.so_dien_thoai ? <span className="block text-xs text-gray-500 mt-1"><i className="fas fa-phone mr-1 opacity-50"></i>{gd.so_dien_thoai}</span> : ''}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-gray-600">{gd.nam_sinh || '-'}</td>
+                                                            <td className="px-4 py-3 text-gray-600">{gd.nghe_nghiep || '-'}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={isDead ? 'text-red-500 font-medium text-xs bg-red-50 px-2 py-1 rounded' : 'text-green-600 font-medium text-xs bg-green-50 px-2 py-1 rounded'}>
+                                                                    {isDead ? `Đã mất ${gd.nam_chet ? `(${gd.nam_chet})` : ''}` : 'Còn sống'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-xs text-gray-600">
+                                                                {[gd.noi_o_chi_tiet, gd.noi_o_hien_tai].filter(Boolean).join(', ') || '-'}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 ) : (
                                     <p className="text-sm text-gray-500 italic">Chưa có thông tin gia đình.</p>
