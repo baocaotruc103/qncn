@@ -1149,46 +1149,65 @@ export default function PersonnelDetail() {
                 </div>
                 
                 {/* Bảng lương để in */}
-                <div ref={pdfLuongRef} className="p-8 bg-white text-black" style={{ width: '1080px', color: 'black', boxSizing: 'border-box' }}>
-                    <h1 className="text-center text-2xl font-bold uppercase mb-4">BẢNG QUÁ TRÌNH CÔNG TÁC VÀ HƯỞNG LƯƠNG</h1>
-                    <div className="flex justify-between mb-6 text-lg">
+                <div ref={pdfLuongRef} className="p-4 bg-white text-black" style={{ width: '1122px', color: 'black', boxSizing: 'border-box' }}>
+                    <h1 className="text-center text-xl font-bold uppercase mb-4">BẢNG QUÁ TRÌNH CÔNG TÁC VÀ HƯỞNG LƯƠNG</h1>
+                    <div className="flex justify-between mb-4 text-sm">
                         <p><span className="font-bold">Họ và tên:</span> {hoSo?.ho_ten_khai_sinh}</p>
                         <p><span className="font-bold">Đơn vị:</span> {hoSo?.don_vi}</p>
                     </div>
-                    <table className="w-full text-sm text-left border-collapse" style={{ border: '1px solid black', tableLayout: 'fixed', wordWrap: 'break-word' }}>
-                        <thead className="bg-gray-100" style={{ backgroundColor: '#f3f4f6' }}>
+                    <table className="w-full text-left border-collapse" style={{ border: '1px solid black', tableLayout: 'fixed', wordWrap: 'break-word', fontSize: '9px', lineHeight: '1.2' }}>
+                        <thead className="bg-gray-100 text-center" style={{ backgroundColor: '#f3f4f6' }}>
                             <tr>
-                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black', width: '5%' }}>STT</th>
-                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black', width: '15%' }}>Thời gian</th>
-                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black', width: '25%' }}>Đơn vị công tác</th>
-                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black', width: '25%' }}>Cấp bậc / Chức vụ</th>
-                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black', width: '18%' }}>Ngạch/Bậc</th>
-                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black', width: '12%' }}>Hệ số</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '2.5%' }}>STT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Từ tháng</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Đến tháng</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '9%' }}>Đơn vị CTT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '9%' }}>Đơn vị CT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>L.thay đổi</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Diện QL</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Diện BT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Cấp bậc</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '9%' }}>Chức vụ, CNQS</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>TN CNQS</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>L.Ngạch</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Nhóm</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3%' }}>Bậc</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Hệ số</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>PC VK</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>HS BL</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>PC CV</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>PC TN</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>TN B.Đầu</th>
                             </tr>
                         </thead>
                         <tbody>
                             {luong && luong.map((l, index) => (
                                 <tr key={l.id}>
-                                    <td className="px-2 py-3 text-center border" style={{ border: '1px solid black' }}>{index + 1}</td>
-                                    <td className="px-2 py-3 border" style={{ border: '1px solid black' }}>{l.tu_thang || ''} - {l.den_thang || 'Nay'}</td>
-                                    <td className="px-2 py-3 border" style={{ border: '1px solid black' }}>
-                                        <p className="font-bold">{l.don_vi_cap_truc_thuoc || '-'}</p>
-                                        <p>{l.don_vi_chi_tiet || '-'}</p>
-                                    </td>
-                                    <td className="px-2 py-3 border" style={{ border: '1px solid black' }}>
-                                        <p className="font-bold">{l.chuc_vu_cnqs || '-'}</p>
-                                        <p>{l.cap_bac || '-'} {l.loai_thay_doi ? `(${l.loai_thay_doi})` : ''}</p>
-                                    </td>
-                                    <td className="px-2 py-3 text-center border" style={{ border: '1px solid black' }}>
-                                        <span>{l.loai_ngach || '-'}</span><br/>
-                                        <span>{l.bac || '-'}/{l.nhom || '-'}</span>
-                                    </td>
-                                    <td className="px-2 py-3 text-center font-bold border" style={{ border: '1px solid black' }}>{l.he_so ? l.he_so.toFixed(2) : '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{index + 1}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.tu_thang || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.den_thang || '-'}</td>
+                                    <td className="px-1 py-1 border" style={{ border: '1px solid black' }}>{l.don_vi_cap_truc_thuoc || '-'}</td>
+                                    <td className="px-1 py-1 border" style={{ border: '1px solid black' }}>{l.don_vi_chi_tiet || '-'}</td>
+                                    <td className="px-1 py-1 border" style={{ border: '1px solid black' }}>{l.loai_thay_doi || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.dien_quan_ly || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.dien_bo_tri || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.cap_bac || '-'}</td>
+                                    <td className="px-1 py-1 border" style={{ border: '1px solid black' }}>{l.chuc_vu_cnqs || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.tn_dam_nhan_cnqs || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.loai_ngach || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.nhom || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.bac || '-'}</td>
+                                    <td className="px-1 py-1 text-center font-bold border" style={{ border: '1px solid black' }}>{l.he_so ? Number(l.he_so).toFixed(2) : '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.pc_vk || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.he_so_bl || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.pc_chuc_vu || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.pc_tn_nghe || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.tn_bat_dau_dam_nhan || '-'}</td>
                                 </tr>
                             ))}
                             {(!luong || luong.length === 0) && (
                                 <tr>
-                                    <td colSpan="6" className="px-2 py-4 text-center italic border" style={{ border: '1px solid black' }}>Chưa có quá trình công tác.</td>
+                                    <td colSpan="20" className="px-1 py-4 text-center italic border" style={{ border: '1px solid black' }}>Chưa có quá trình công tác.</td>
                                 </tr>
                             )}
                         </tbody>
