@@ -256,9 +256,9 @@ export default function PrintForm({ data }) {
         
         <div className="section-title mt-6">VII. Thông tin lương & Quá trình công tác</div>
         <div className="grid grid-cols-12 gap-x-4 mb-4">
-            <div className="col-span-4 field-group"><span className="field-label">Bắt đầu đóng BHXH:</span><span className="field-value"></span></div>
-            <div className="col-span-4 field-group"><span className="field-label">Số sổ:</span><span className="field-value"></span></div>
-            <div className="col-span-4 field-group"><span className="field-label">Theo chế độ:</span><span className="field-value"></span></div>
+            <div className="col-span-4 field-group"><span className="field-label">Bắt đầu đóng BHXH:</span><span className="field-value">{field(hoSo, ['bat_dau_dong_bhxh'])}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">Số sổ:</span><span className="field-value">{field(hoSo, ['so_so_bhxh'])}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">Theo chế độ:</span><span className="field-value">{field(hoSo, ['theo_che_do'])}</span></div>
         </div>
 
         <div className="font-bold mt-2 mb-1 text-sm italic">Quá trình công tác và hưởng lương:</div>
