@@ -127,7 +127,7 @@ export default function PersonnelDetail() {
                 image: { type: 'jpeg', quality: 0.8 }, // Giảm quality để nén ảnh
                 html2canvas: { scale: 1.5, useCORS: true }, // scale 1.5 đủ sắc nét mà không quá nặng
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }, // compress: true để nén luồng PDF
-                pagebreak: { mode: 'css', avoid: ['tr', '.print-break-avoid', 'h2', 'h3', '.section-title'] }
+                pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'thead', '.print-break-avoid', 'h2', 'h3', '.section-title'] }
             };
 
             // Tạo PDF dạng blob (chưa tải xuống ngay)
@@ -347,7 +347,7 @@ export default function PersonnelDetail() {
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, windowWidth: 740 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-                pagebreak: { mode: 'css', avoid: ['tr', '.print-break-avoid', '.section-title', '.field-group'] }
+                pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'thead', '.print-break-avoid', '.section-title', '.field-group'] }
             };
 
             const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
