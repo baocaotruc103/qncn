@@ -274,28 +274,28 @@ export default function PrintForm({ data }) {
 
         <div className="font-bold mt-2 mb-1 text-sm italic">Quá trình công tác và hưởng lương:</div>
         <div className="overflow-x-auto">
-            <table className="salary-table text-[6px] w-full" style={{ tableLayout: "fixed", wordWrap: "break-word", minWidth: "280mm" }}>
+            <table className="salary-table text-[6px] w-full" style={{ tableLayout: "fixed", wordWrap: "break-word", minWidth: "310mm" }}>
                 <thead>
                     <tr>
-                        <th style={{width: "4.5%", padding: "2px"}}>Từ tháng</th>
-                        <th style={{width: "4.5%", padding: "2px"}}>Đến tháng</th>
-                        <th style={{width: "6%", padding: "2px"}}>ĐV trực thuộc</th>
-                        <th style={{width: "6%", padding: "2px"}}>ĐV chi tiết</th>
-                        <th style={{width: "5.5%", padding: "2px"}}>Loại TĐ</th>
-                        <th style={{width: "4%", padding: "2px"}}>D.QL</th>
-                        <th style={{width: "4%", padding: "2px"}}>D.BT</th>
-                        <th style={{width: "4%", padding: "2px"}}>C.Bậc</th>
-                        <th style={{width: "6%", padding: "2px"}}>CV/CNQS</th>
-                        <th style={{width: "4%", padding: "2px"}}>TN CNQS</th>
-                        <th style={{width: "4.5%", padding: "2px"}}>Ngạch</th>
-                        <th style={{width: "3%", padding: "2px"}}>Nhóm</th>
-                        <th style={{width: "3%", padding: "2px"}}>Bậc</th>
-                        <th style={{width: "3.5%", padding: "2px"}}>HS</th>
-                        <th style={{width: "3.5%", padding: "2px"}}>VK%</th>
-                        <th style={{width: "3.5%", padding: "2px"}}>BL</th>
-                        <th style={{width: "4%", padding: "2px"}}>PC CV</th>
-                        <th style={{width: "4%", padding: "2px"}}>TN Nghề</th>
-                        <th style={{width: "4%", padding: "2px"}}>TN bđ</th>
+                        <th style={{width: "4.2%", padding: "2px"}}>Từ tháng</th>
+                        <th style={{width: "4.2%", padding: "2px"}}>Đến tháng</th>
+                        <th style={{width: "5.2%", padding: "2px"}}>ĐV trực thuộc</th>
+                        <th style={{width: "5.2%", padding: "2px"}}>ĐV chi tiết</th>
+                        <th style={{width: "5%", padding: "2px"}}>Loại TĐ</th>
+                        <th style={{width: "3.8%", padding: "2px"}}>D.QL</th>
+                        <th style={{width: "3.8%", padding: "2px"}}>D.BT</th>
+                        <th style={{width: "3.8%", padding: "2px"}}>C.Bậc</th>
+                        <th style={{width: "5.2%", padding: "2px"}}>CV/CNQS</th>
+                        <th style={{width: "3.8%", padding: "2px"}}>TN CNQS</th>
+                        <th style={{width: "4.2%", padding: "2px"}}>Ngạch</th>
+                        <th style={{width: "2.8%", padding: "2px"}}>Nhóm</th>
+                        <th style={{width: "2.8%", padding: "2px"}}>Bậc</th>
+                        <th style={{width: "3.2%", padding: "2px"}}>HS</th>
+                        <th style={{width: "3.2%", padding: "2px"}}>VK%</th>
+                        <th style={{width: "3.2%", padding: "2px"}}>BL</th>
+                        <th style={{width: "3.8%", padding: "2px"}}>PC CV</th>
+                        <th style={{width: "3.8%", padding: "2px"}}>PC TN</th>
+                        <th style={{width: "4.2%", padding: "2px"}}>TN bđ</th>
                     </tr>
                 </thead>
                 <tbody>
