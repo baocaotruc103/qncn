@@ -110,7 +110,13 @@ export default function TabThongTinChung({ initialData = {}, currentUser }) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">2. Ngày tháng năm sinh <span className="text-red-500">*</span></label>
-                        <input type="date" required ref={ngaySinhRef} onChange={updateCccdExpiryDate} defaultValue={initialData?.ngay_sinh || ''} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
+                        <div className="flex gap-2">
+                            <input type="date" required ref={ngaySinhRef} onChange={updateCccdExpiryDate} defaultValue={initialData?.ngay_sinh || ''} className="mt-1 block w-2/3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" />
+                            <select defaultValue={initialData?.gioi_tinh || 'Nam'} className="mt-1 block w-1/3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 bg-white">
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">3. Đơn vị</label>
@@ -222,7 +228,19 @@ export default function TabThongTinChung({ initialData = {}, currentUser }) {
                     </div>
                     <div>
                         <label className="block text-sm text-gray-700 font-medium">22. TN Tái ngũ</label>
-                        <input type="text" defaultValue={initialData?.tn_tai_ngu || ''} inputMode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year className="mt-1 block w-full rounded border p-1 text-sm" />
+                        <input type="text" defaultValue={initialData?.tn_tai_ngu || ''} inputMode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year className="mt-1 block w-full rounded border p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-gray-700 font-medium">23. HSQ-BS sang QNCN</label>
+                        <input type="text" defaultValue={initialData?.tn_hsq_bs_sang_qncn || ''} inputMode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year className="mt-1 block w-full rounded border p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-gray-700 font-medium">24. HSQ-BS sang CNVQP</label>
+                        <input type="text" defaultValue={initialData?.tn_hsq_bs_sang_cnvqp || ''} inputMode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year className="mt-1 block w-full rounded border p-2 text-sm" />
+                    </div>
+                    <div className="sm:col-span-2 md:col-span-2">
+                        <label className="block text-sm text-gray-700 font-medium">25. CNVQP sang QNCN</label>
+                        <input type="text" defaultValue={initialData?.tn_cnvqp_sang_qncn || ''} inputMode="numeric" placeholder="mm/yyyy" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" data-month-year className="mt-1 block w-full rounded border p-2 text-sm" />
                     </div>
                     <div>
                         <label className="block text-sm text-gray-700 font-medium">26. Ngày vào Đoàn</label>

@@ -13,7 +13,7 @@ end $$;
 
 create table if not exists public.tai_khoan (
   id uuid not null default gen_random_uuid(),
-  ho_ten character varying(255) not null,
+  ho_va_ten character varying(255) not null,
   ten_dang_nhap public.citext not null,
   mat_khau text not null,
   vai_tro public.user_role not null default 'user'::public.user_role,
@@ -26,7 +26,7 @@ create table if not exists public.tai_khoan (
 create index if not exists idx_tai_khoan_ten_dang_nhap on public.tai_khoan using btree (ten_dang_nhap);
 create index if not exists idx_tai_khoan_vai_tro on public.tai_khoan using btree (vai_tro);
 
-insert into public.tai_khoan (ho_ten, ten_dang_nhap, mat_khau, vai_tro)
+insert into public.tai_khoan (ho_va_ten, ten_dang_nhap, mat_khau, vai_tro)
 values ('Administrator', 'admin', 'admin123', 'admin'::public.user_role)
 on conflict (ten_dang_nhap) do nothing;
 
@@ -57,6 +57,7 @@ create table public.ho_so_qncn (
   -- I. Thong tin chung
   ho_ten_khai_sinh text not null,
   ngay_sinh date not null,
+  gioi_tinh text,
   don_vi text,
   thang_nam_vao_quan_doi char(7),
   so_cmqncn_cmsq text,
@@ -82,6 +83,9 @@ create table public.ho_so_qncn (
   tn_nhap_ngu char(7),
   tn_xuat_ngu char(7),
   tn_tai_ngu char(7),
+  tn_hsq_bs_sang_qncn char(7),
+  tn_hsq_bs_sang_cnvqp char(7),
+  tn_cnvqp_sang_qncn char(7),
   ngay_vao_doan date,
   ngay_vao_dang date,
   ngay_chinh_thuc_dang date,

@@ -61,8 +61,9 @@ export default function PrintForm({ data }) {
         <div className="section-title">I. Thông tin chung</div>
         
         <div className="grid grid-cols-12 gap-x-4">
-            <div className="col-span-8 field-group"><span className="field-label">1. Họ tên khai sinh:</span><span className="field-value uppercase bold">{hoSo.ho_ten_khai_sinh || ""} </span></div>
+            <div className="col-span-6 field-group"><span className="field-label">1. Họ tên khai sinh:</span><span className="field-value uppercase bold">{hoSo.ho_ten_khai_sinh || ""} </span></div>
             <div className="col-span-4 field-group"><span className="field-label">2. Ngày sinh:</span><span className="field-value">{formatDate(hoSo.ngay_sinh)}</span></div>
+            <div className="col-span-2 field-group"><span className="field-label">Giới tính:</span><span className="field-value text-center">{hoSo.gioi_tinh || ""}</span></div>
             
             <div className="col-span-12 field-group"><span className="field-label">3. Đơn vị:</span><span className="field-value">{hoSo.don_vi || ""}</span></div>
             
@@ -104,9 +105,9 @@ export default function PrintForm({ data }) {
             <div className="col-span-4 field-group"><span className="field-label">22. Tháng, năm Tái ngũ:</span><span className="field-value"></span></div>
             <div className="col-span-4 field-group"><span className="field-label"></span><span className="field-value border-none"></span></div>
             
-            <div className="col-span-4 field-group"><span className="field-label">23. HSQ-BS sang QNCN:</span><span className="field-value"></span></div>
-            <div className="col-span-4 field-group"><span className="field-label">24. HSQ-BS sang CNVQP:</span><span className="field-value"></span></div>
-            <div className="col-span-4 field-group"><span className="field-label">25. CNVQP sang QNCN:</span><span className="field-value"></span></div>
+            <div className="col-span-4 field-group"><span className="field-label">23. HSQ-BS sang QNCN:</span><span className="field-value">{hoSo.tn_hsq_bs_sang_qncn || ""}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">24. HSQ-BS sang CNVQP:</span><span className="field-value">{hoSo.tn_hsq_bs_sang_cnvqp || ""}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">25. CNVQP sang QNCN:</span><span className="field-value">{hoSo.tn_cnvqp_sang_qncn || ""}</span></div>
 
             <div className="col-span-4 field-group"><span className="field-label">26. Ngày vào Đoàn:</span><span className="field-value"></span></div>
             <div className="col-span-4 field-group"><span className="field-label">27. Ngày vào Đảng:</span><span className="field-value"></span></div>
