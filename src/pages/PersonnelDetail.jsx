@@ -561,7 +561,7 @@ export default function PersonnelDetail() {
                 margin: [10, 10, 10, 10], 
                 filename: `BangLuong_${data?.hoSo?.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 1080 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
             };
 
@@ -1149,21 +1149,21 @@ export default function PersonnelDetail() {
                 </div>
                 
                 {/* Bảng lương để in */}
-                <div ref={pdfLuongRef} className="p-8 bg-white text-black" style={{ width: '297mm', color: 'black', boxSizing: 'border-box' }}>
+                <div ref={pdfLuongRef} className="p-8 bg-white text-black" style={{ width: '1080px', color: 'black', boxSizing: 'border-box' }}>
                     <h1 className="text-center text-2xl font-bold uppercase mb-4">BẢNG QUÁ TRÌNH CÔNG TÁC VÀ HƯỞNG LƯƠNG</h1>
                     <div className="flex justify-between mb-6 text-lg">
                         <p><span className="font-bold">Họ và tên:</span> {hoSo?.ho_ten_khai_sinh}</p>
                         <p><span className="font-bold">Đơn vị:</span> {hoSo?.don_vi}</p>
                     </div>
-                    <table className="w-full text-sm text-left border-collapse" style={{ border: '1px solid black' }}>
+                    <table className="w-full text-sm text-left border-collapse" style={{ border: '1px solid black', tableLayout: 'fixed', wordWrap: 'break-word' }}>
                         <thead className="bg-gray-100" style={{ backgroundColor: '#f3f4f6' }}>
                             <tr>
-                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black' }}>STT</th>
-                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black' }}>Thời gian</th>
-                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black' }}>Đơn vị công tác</th>
-                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black' }}>Cấp bậc / Chức vụ</th>
-                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black' }}>Ngạch/Bậc</th>
-                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black' }}>Hệ số</th>
+                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black', width: '5%' }}>STT</th>
+                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black', width: '15%' }}>Thời gian</th>
+                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black', width: '25%' }}>Đơn vị công tác</th>
+                                <th className="px-2 py-3 font-bold border" style={{ border: '1px solid black', width: '25%' }}>Cấp bậc / Chức vụ</th>
+                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black', width: '18%' }}>Ngạch/Bậc</th>
+                                <th className="px-2 py-3 font-bold text-center border" style={{ border: '1px solid black', width: '12%' }}>Hệ số</th>
                             </tr>
                         </thead>
                         <tbody>
