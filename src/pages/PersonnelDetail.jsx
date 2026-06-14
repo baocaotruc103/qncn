@@ -1158,17 +1158,16 @@ export default function PersonnelDetail() {
                     <table className="w-full text-left border-collapse" style={{ border: '1px solid black', tableLayout: 'fixed', wordWrap: 'break-word', fontSize: '9px', lineHeight: '1.2' }}>
                         <thead className="bg-gray-100 text-center" style={{ backgroundColor: '#f3f4f6' }}>
                             <tr>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '2.5%' }}>STT</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Từ tháng</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Đến tháng</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '8%' }}>Đơn vị CTT</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '8%' }}>Đơn vị CT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>Từ tháng</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>Đến tháng</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '8.5%' }}>Đơn vị CTT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '8.5%' }}>Đơn vị CT</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>L.thay đổi</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>Diện QL</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>Diện BT</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>Cấp bậc</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '9%' }}>Chức vụ, CNQS</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>TN CNQS</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>TN CNQS</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>L.Ngạch</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Nhóm</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Bậc</th>
@@ -1183,7 +1182,6 @@ export default function PersonnelDetail() {
                         <tbody>
                             {luong && luong.map((l, index) => (
                                 <tr key={l.id}>
-                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{index + 1}</td>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.tu_thang || '-'}</td>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.den_thang || '-'}</td>
                                     <td className="px-1 py-1 border" style={{ border: '1px solid black' }}>{l.don_vi_cap_truc_thuoc || '-'}</td>
@@ -1207,7 +1205,7 @@ export default function PersonnelDetail() {
                             ))}
                             {(!luong || luong.length === 0) && (
                                 <tr>
-                                    <td colSpan="20" className="px-1 py-4 text-center italic border" style={{ border: '1px solid black' }}>Chưa có quá trình công tác.</td>
+                                    <td colSpan="19" className="px-1 py-4 text-center italic border" style={{ border: '1px solid black' }}>Chưa có quá trình công tác.</td>
                                 </tr>
                             )}
                         </tbody>
