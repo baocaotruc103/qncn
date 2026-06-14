@@ -1161,17 +1161,17 @@ export default function PersonnelDetail() {
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '2.5%' }}>STT</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Từ tháng</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Đến tháng</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '9%' }}>Đơn vị CTT</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '9%' }}>Đơn vị CT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '8%' }}>Đơn vị CTT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '8%' }}>Đơn vị CT</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>L.thay đổi</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Diện QL</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Diện BT</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>Cấp bậc</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>Diện QL</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>Diện BT</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>Cấp bậc</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '9%' }}>Chức vụ, CNQS</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5.5%' }}>TN CNQS</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>L.Ngạch</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Nhóm</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3%' }}>Bậc</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Bậc</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Hệ số</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>PC VK</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>HS BL</th>
