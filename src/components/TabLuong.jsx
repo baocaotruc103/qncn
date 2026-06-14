@@ -305,19 +305,34 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
         });
     };
 
-    const renderTableInput = (row, field, type, placeholder) => (
-        <input
-            type={type}
-            step={type === 'number' ? '0.01' : undefined}
-            inputMode={placeholder ? 'numeric' : undefined}
-            placeholder={placeholder}
-            data-month-year={placeholder ? 'true' : undefined}
-            className="w-full border-0 bg-transparent text-sm p-1 outline-none focus:ring-1 focus:ring-blue-500"
-            value={row[field]}
-            onChange={(e) => updateRowField(row.id, field, e.target.value)}
-            list={field === 'loaiThayDoi' ? 'loaiThayDoiSuggestions' : undefined}
-        />
-    );
+    const renderTableInput = (row, field, type, placeholder) => {
+        const isCompactInput = type === 'number' || Boolean(placeholder);
+        const commonClassName = 'w-full min-w-0 border-0 bg-transparent text-[11px] leading-snug outline-none focus:ring-1 focus:ring-blue-500';
+
+        if (isCompactInput) {
+            return (
+                <input
+                    type={type}
+                    step={type === 'number' ? '0.01' : undefined}
+                    inputMode={placeholder ? 'numeric' : undefined}
+                    placeholder={placeholder}
+                    data-month-year={placeholder ? 'true' : undefined}
+                    className={`${commonClassName} p-0.5 text-center`}
+                    value={row[field]}
+                    onChange={(e) => updateRowField(row.id, field, e.target.value)}
+                />
+            );
+        }
+
+        return (
+            <textarea
+                rows={2}
+                className={`${commonClassName} resize-none p-0.5`}
+                value={row[field]}
+                onChange={(e) => updateRowField(row.id, field, e.target.value)}
+            />
+        );
+    };
 
     return (
         <section id="tab6" className="tab-pane block">
@@ -348,16 +363,16 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
                     </button>
                 </div>
                 <div className="md:hidden text-xs text-blue-600 p-2 bg-blue-50 border-b scroll-hint">
-                    <i className="fas fa-arrows-alt-h mr-1"></i>Vuốt ngang để xem và nhập tất cả các cột
+                    <i className="fas fa-table mr-1"></i>Các cột tự xuống dòng để vừa màn hình
                 </div>
-                <div className="table-container overflow-x-auto w-full mobile-vertical-table bg-gray-50 p-2 sm:p-0 sm:bg-white" style={{ maxHeight: '500px', overflowY: 'auto' }}>
-                    <table className="w-full text-sm text-left border-collapse" id="tableLuong">
+                <div className="table-container overflow-x-hidden w-full mobile-vertical-table bg-gray-50 p-2 sm:p-0 sm:bg-white" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                    <table className="w-full table-fixed text-[11px] text-left border-collapse" id="tableLuong">
                         <thead className="text-xs text-gray-700 bg-gray-100 shadow-sm border-b-2 border-gray-300">
                             <tr>
                                 {salaryFields.map(([, label]) => (
-                                    <th key={label} className="border p-2 min-w-[120px]">{label}</th>
+                                    <th key={label} className="border p-1 align-top leading-tight whitespace-normal break-words">{label}</th>
                                 ))}
-                                <th className="border p-2 min-w-[150px] text-center">Thao tác</th>
+                                <th className="border p-1 text-center align-top leading-tight whitespace-normal break-words">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="tbodyLuong">
@@ -370,16 +385,16 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
                             ) : rows.map((row, index) => (
                                 <tr key={row.id} className="border-b bg-white hover:bg-gray-50 luong-row">
                                     {salaryFields.map(([field, label, type, placeholder]) => (
-                                        <td key={field} className="p-1 border" data-label={label}>
+                                        <td key={field} className="border p-0.5 align-top whitespace-normal break-words" data-label={label}>
                                             {renderTableInput(row, field, type, placeholder)}
                                         </td>
                                     ))}
-                                    <td className="p-1 border text-center">
-                                        <div className="flex items-center justify-center gap-1">
-                                            <button type="button" onClick={() => openEditModal(row)} className="text-blue-600 hover:bg-blue-100 bg-blue-50 p-1 px-2 rounded transition-colors" title="Sửa dòng"><i className="fas fa-pen"></i></button>
-                                            <button type="button" onClick={() => moveRow(index, -1)} disabled={index === 0} className="text-gray-700 hover:bg-gray-200 bg-gray-100 p-1 px-2 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Di chuyển lên"><i className="fas fa-arrow-up"></i></button>
-                                            <button type="button" onClick={() => moveRow(index, 1)} disabled={index === rows.length - 1} className="text-gray-700 hover:bg-gray-200 bg-gray-100 p-1 px-2 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Di chuyển xuống"><i className="fas fa-arrow-down"></i></button>
-                                            <button type="button" onClick={() => removeRow(row.id)} className="text-red-500 hover:bg-red-200 bg-red-100 p-1 px-2 rounded transition-colors" title="Xóa dòng"><i className="fas fa-trash"></i></button>
+                                    <td className="border p-0.5 text-center align-top">
+                                        <div className="flex flex-wrap items-center justify-center gap-0.5">
+                                            <button type="button" onClick={() => openEditModal(row)} className="text-blue-600 hover:bg-blue-100 bg-blue-50 p-1 rounded transition-colors" title="Sửa dòng"><i className="fas fa-pen"></i></button>
+                                            <button type="button" onClick={() => moveRow(index, -1)} disabled={index === 0} className="text-gray-700 hover:bg-gray-200 bg-gray-100 p-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Di chuyển lên"><i className="fas fa-arrow-up"></i></button>
+                                            <button type="button" onClick={() => moveRow(index, 1)} disabled={index === rows.length - 1} className="text-gray-700 hover:bg-gray-200 bg-gray-100 p-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Di chuyển xuống"><i className="fas fa-arrow-down"></i></button>
+                                            <button type="button" onClick={() => removeRow(row.id)} className="text-red-500 hover:bg-red-200 bg-red-100 p-1 rounded transition-colors" title="Xóa dòng"><i className="fas fa-trash"></i></button>
                                         </div>
                                     </td>
                                 </tr>
