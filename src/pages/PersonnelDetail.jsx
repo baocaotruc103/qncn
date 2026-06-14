@@ -449,22 +449,48 @@ export default function PersonnelDetail() {
                 const td = document.createElement('td');
                 td.style.width = `${(span / 12) * 100}%`;
                 td.style.verticalAlign = 'bottom';
-                td.style.padding = '4px 8px 4px 0';
+                td.style.padding = '2px 6px 2px 0'; // Slightly smaller padding
                 td.style.border = 'none';
                 
                 if (child.classList.contains('field-group')) {
                     const label = child.querySelector('.field-label');
                     const value = child.querySelector('.field-value');
-                    if (label) {
-                        label.style.fontWeight = 'bold';
-                        label.style.display = 'inline';
+                    
+                    if (label && value) {
+                        const labelHtml = label.innerHTML;
+                        const valueHtml = value.innerHTML;
+                        const align = value.classList.contains('text-center') ? 'center' : 'left';
+                        
+                        let valueStyles = `border-bottom: 1px dotted black; text-align: ${align}; vertical-align: bottom;`;
+                        if (value.classList.contains('bold')) valueStyles += ' font-weight: bold;';
+                        if (value.classList.contains('uppercase')) valueStyles += ' text-transform: uppercase;';
+                        if (value.classList.contains('italic')) valueStyles += ' font-style: italic;';
+                        if (value.classList.contains('text-xs')) valueStyles += ' font-size: 10pt;';
+                        
+                        let labelStyles = `width: 1%; white-space: nowrap; font-weight: bold; padding-right: 4px; vertical-align: bottom;`;
+                        if (label.classList.contains('italic')) labelStyles += ' font-style: italic;';
+                        if (label.classList.contains('underline')) labelStyles += ' text-decoration: underline;';
+
+                        td.innerHTML = `
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0; padding: 0; border: none;">
+                                <tr>
+                                    <td style="${labelStyles}">${labelHtml}</td>
+                                    <td style="${valueStyles}">${valueHtml}</td>
+                                </tr>
+                            </table>
+                        `;
+                    } else if (label && !value) {
+                        let labelStyles = `font-weight: bold;`;
+                        if (label.classList.contains('italic')) labelStyles += ' font-style: italic;';
+                        if (label.classList.contains('underline')) labelStyles += ' text-decoration: underline;';
+                        td.innerHTML = `<span style="${labelStyles}">${label.innerHTML}</span>`;
+                    } else {
+                        td.innerHTML = child.innerHTML;
                     }
-                    if (value) {
-                        value.style.display = 'inline';
-                        value.style.borderBottom = '1px dotted black';
-                    }
+                } else {
+                    td.innerHTML = child.innerHTML;
                 }
-                td.innerHTML = child.innerHTML;
+                
                 tr.appendChild(td);
                 currentCols += span;
             });
