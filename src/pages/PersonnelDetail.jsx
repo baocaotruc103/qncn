@@ -561,7 +561,7 @@ export default function PersonnelDetail() {
                 margin: [10, 10, 10, 10], 
                 filename: `BangLuong_${data?.hoSo?.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 1080 },
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 1122 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
             };
 
