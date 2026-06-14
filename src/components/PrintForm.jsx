@@ -11,6 +11,14 @@ export default function PrintForm({ data }) {
         } catch { return d; }
     };
 
+    const field = (source, keys, fallback = '') => {
+        for (const key of keys) {
+            const value = source?.[key];
+            if (value !== null && value !== undefined && value !== '') return value;
+        }
+        return fallback;
+    };
+
     const safeDaoTao = daoTao || [];
     const safeGiaDinh = giaDinh || [];
     const safeKhen = khenThuong || [];
@@ -112,10 +120,10 @@ export default function PrintForm({ data }) {
             <div className="col-span-6 field-group"><span className="field-label">Trình độ đào tạo cao nhất:</span><span className="field-value">{hoSo.trinh_do_dao_tao_cao_nhat || ""}</span></div>
             
             <div className="col-span-6 field-group"><span className="field-label">Ngành nghề cao nhất:</span><span className="field-value">{hoSo.nganh_nghe_cao_nhat || ""}</span></div>
-            <div className="col-span-6 field-group"><span className="field-label">Năm tốt nghiệp:</span><span className="field-value">{hoSo.nam_tot_nghiep_cao_nhat || ""}</span></div>
+            <div className="col-span-6 field-group"><span className="field-label">Năm tốt nghiệp:</span><span className="field-value">{field(hoSo, ['nam_tot_nghiep', 'nam_tot_nghiep_cao_nhat'])}</span></div>
 
-            <div className="col-span-6 field-group"><span className="field-label">Trình độ liên quan CNQS:</span><span className="field-value">{hoSo.trinh_do_dao_tao_cao_nhat || ""}</span></div>
-            <div className="col-span-6 field-group"><span className="field-label">Ngành nghề CNQS:</span><span className="field-value">{hoSo.nganh_nghe_cao_nhat || ""}</span></div>
+            <div className="col-span-6 field-group"><span className="field-label">Trình độ liên quan CNQS:</span><span className="field-value">{field(hoSo, ['trinh_do_lien_quan_cnqs', 'trinh_do_dao_tao_cao_nhat'])}</span></div>
+            <div className="col-span-6 field-group"><span className="field-label">Ngành nghề CNQS:</span><span className="field-value">{field(hoSo, ['nganh_nghe_lien_quan_cnqs', 'nganh_nghe_cao_nhat'])}</span></div>
         </div>
         
         <div className="font-bold mt-2 mb-1 text-sm italic">Quá trình đào tạo lại:</div>
@@ -132,11 +140,11 @@ export default function PrintForm({ data }) {
             <tbody>
                 {safeDaoTao.length > 0 ? safeDaoTao.map((dt, i) => (
                     <tr key={i}>
-                        <td className="text-center">{dt.loai_dao_tao}</td>
-                        <td className="text-center">{dt.thoi_gian_bat_dau}</td>
-                        <td className="text-center">{dt.thoi_gian_ket_thuc}</td>
-                        <td className="text-center">{dt.bac_dao_tao}</td>
-                        <td>{dt.ten_truong}</td>
+                        <td className="text-center">{field(dt, ['loai', 'loai_dao_tao'])}</td>
+                        <td className="text-center">{field(dt, ['bat_dau', 'thoi_gian_bat_dau', 'batDau'])}</td>
+                        <td className="text-center">{field(dt, ['ket_thuc', 'thoi_gian_ket_thuc', 'ketThuc'])}</td>
+                        <td className="text-center">{field(dt, ['bac_dao_tao', 'bacDaoTao'])}</td>
+                        <td>{field(dt, ['ten_truong', 'tenTruong'])}</td>
                     </tr>
                 )) : <tr><td colSpan="5" className="text-center italic text-gray-500 py-4">Không có dữ liệu</td></tr>}
             </tbody>
@@ -145,13 +153,13 @@ export default function PrintForm({ data }) {
         
         <div className="section-title mt-4">IV. Đặc điểm nhận dạng & Sức khỏe</div>
         <div className="grid grid-cols-12 gap-x-4">
-            <div className="col-span-4 field-group"><span className="field-label">Chiều cao (m):</span><span className="field-value"></span></div>
-            <div className="col-span-4 field-group"><span className="field-label">Sống mũi:</span><span className="field-value"></span></div>
-            <div className="col-span-4 field-group"><span className="field-label">Nếp tai dưới:</span><span className="field-value"></span></div>
-            <div className="col-span-4 field-group"><span className="field-label">Dái tai:</span><span className="field-value"></span></div>
-            <div className="col-span-8 field-group"><span className="field-label">Dấu vết riêng:</span><span className="field-value"></span></div>
-            <div className="col-span-6 field-group"><span className="field-label">Hạn dùng:</span><span className="field-value"></span></div>
-            <div className="col-span-12 field-group"><span className="field-label">Thông tin sức khỏe:</span><span className="field-value"></span></div>
+            <div className="col-span-4 field-group"><span className="field-label">Chiều cao (m):</span><span className="field-value">{field(hoSo, ['chieu_cao_m'])}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">Sống mũi:</span><span className="field-value">{field(hoSo, ['song_mui'])}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">Nếp tai dưới:</span><span className="field-value">{field(hoSo, ['nep_tai_duoi'])}</span></div>
+            <div className="col-span-4 field-group"><span className="field-label">Dái tai:</span><span className="field-value">{field(hoSo, ['dai_tai'])}</span></div>
+            <div className="col-span-8 field-group"><span className="field-label">Dấu vết riêng:</span><span className="field-value">{field(hoSo, ['dau_vet_rieng'])}</span></div>
+            <div className="col-span-6 field-group"><span className="field-label">Hạn dùng:</span><span className="field-value">{field(hoSo, ['han_dung'])}</span></div>
+            <div className="col-span-12 field-group"><span className="field-label">Thông tin sức khỏe:</span><span className="field-value">{field(hoSo, ['thong_tin_suc_khoe'])}</span></div>
         </div>
     </div>
 
