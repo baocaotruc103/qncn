@@ -406,6 +406,55 @@ export default function PersonnelDetail() {
         }
     };
 
+    const handleExportWordForm = () => {
+        if (!window.confirm("Bạn có chắc muốn xuất Word Form Lý lịch không?")) return;
+        
+        const element = pdfFormRef.current;
+        if (!element) {
+            alert("Không tìm thấy nội dung để xuất.");
+            return;
+        }
+        
+        const htmlContent = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset='utf-8'>
+                <title>Export HTML To Doc</title>
+                <style>
+                    body { font-family: "Times New Roman", Times, serif; font-size: 12pt; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
+                    th, td { border: 1px dotted black; padding: 5px; text-align: left; vertical-align: top; }
+                    th { font-weight: bold; background-color: #f7f7f7; text-align: center; border-style: solid; }
+                    .section-title { font-size: 14pt; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid black; margin-top: 15px; margin-bottom: 10px; padding-bottom: 2px; }
+                    .field-group { margin-bottom: 5px; }
+                    .field-label { font-weight: bold; margin-right: 5px; }
+                    .field-value { display: inline-block; border-bottom: 1px dotted black; min-width: 50px; }
+                    .text-center { text-align: center; }
+                    .bold { font-weight: bold; }
+                    .uppercase { text-transform: uppercase; }
+                    .italic { font-style: italic; }
+                    .underline { text-decoration: underline; }
+                </style>
+            </head>
+            <body>
+                ${element.innerHTML}
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob(['\ufeff', htmlContent], {
+            type: 'application/msword'
+        });
+        
+        const fileName = `Form_${data?.hoSo?.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}.doc`;
+        const downloadLink = document.createElement("a");
+        document.body.appendChild(downloadLink);
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = fileName;
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
