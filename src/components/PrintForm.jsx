@@ -187,7 +187,10 @@ export default function PrintForm({ data }) {
                         <td>{gd.hoTen || gd.ho_ten} {gd.soDienThoai ? <><br /><span className="text-xs text-gray-600">{gd.soDienThoai}</span></> : ''}</td>
                         <td className="text-center">{gd.namSinh || gd.nam_sinh}</td>
                         <td>{gd.ngheNghiep || gd.nghe_nghiep}</td>
-                        <td className="text-center">{gd.trangThai || gd.trang_thai}</td>
+                        <td className="text-center">
+                            {gd.trangThai || gd.trang_thai}
+                            {(gd.trangThai === 'Đã chết' || gd.trang_thai === 'Đã chết') && (gd.namChet || gd.nam_chet) ? ` (Năm ${gd.namChet || gd.nam_chet})` : ''}
+                        </td>
                         <td>{gd.noiOHienTai || gd.noi_o_hien_tai || ""}</td>
                         <td>{gd.noiOChiTiet || gd.noi_o_chi_tiet || gd.noi_o_hien_tai_chi_tiet || ""}</td>
                     </tr>
