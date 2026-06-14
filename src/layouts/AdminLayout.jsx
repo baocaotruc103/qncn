@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/authContextBase';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
@@ -41,32 +42,44 @@ export default function AdminLayout() {
     navigate('/login', { replace: true });
   }
 
-  function renderMenuItems({ isMobile = false } = {}) {
+  function renderMenuItems({ isMobile = false, isCollapsed = false } = {}) {
     return menuItems.map((item) => {
       if (item.children) {
         const expanded = itemHasActiveChild(item);
 
         return (
           <li key={item.name}>
-            <div className={`flex items-center px-6 py-3 text-sm font-semibold ${expanded ? 'bg-blue-950 text-white' : 'text-blue-100'}`}>
-              <i className={`${item.icon} w-6 text-center mr-3 text-lg`}></i>
-              <span className="flex-1">{item.name}</span>
-              <i className={`fas fa-chevron-${expanded ? 'down' : 'right'} text-xs`}></i>
+            <div
+              title={isCollapsed ? item.name : undefined}
+              className={`flex items-center py-3 text-sm font-semibold ${
+                isCollapsed ? 'justify-center px-0' : 'px-6'
+              } ${expanded ? 'bg-blue-950 text-white' : 'text-blue-100'}`}
+            >
+              <i className={`${item.icon} w-6 text-center text-lg ${isCollapsed ? '' : 'mr-3'}`}></i>
+              {!isCollapsed && (
+                <>
+                  <span className="flex-1">{item.name}</span>
+                  <i className={`fas fa-chevron-${expanded ? 'down' : 'right'} text-xs`}></i>
+                </>
+              )}
             </div>
-            <ul className="bg-blue-950/50 py-1">
+            <ul className={`bg-blue-950/50 py-1 ${isCollapsed ? 'space-y-1' : ''}`}>
               {item.children.map((child) => (
                 <li key={child.path}>
                   <Link
                     to={child.path}
                     onClick={() => isMobile && setSidebarOpen(false)}
-                    className={`flex items-center pl-12 pr-6 py-2.5 text-sm font-medium transition-colors ${
+                    title={isCollapsed ? child.name : undefined}
+                    className={`flex items-center py-2.5 text-sm font-medium transition-colors ${
+                      isCollapsed ? 'justify-center px-0' : 'pl-12 pr-6'
+                    } ${
                       isActivePath(child.path)
                         ? 'bg-blue-800 border-l-4 border-white text-white'
                         : 'hover:bg-blue-800 text-blue-100'
                     }`}
                   >
-                    <i className={`${child.icon} w-5 text-center mr-3`}></i>
-                    {child.name}
+                    <i className={`${child.icon} w-5 text-center ${isCollapsed ? '' : 'mr-3'}`}></i>
+                    {!isCollapsed && child.name}
                   </Link>
                 </li>
               ))}
@@ -80,14 +93,17 @@ export default function AdminLayout() {
           <Link
             to={item.path}
             onClick={() => isMobile && setSidebarOpen(false)}
-            className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+            title={isCollapsed ? item.name : undefined}
+            className={`flex items-center py-3 text-sm font-medium transition-colors duration-200 ${
+              isCollapsed ? 'justify-center px-0' : 'px-6'
+            } ${
               isActivePath(item.path)
                 ? 'bg-blue-800 border-l-4 border-white'
                 : 'hover:bg-blue-800 hover:text-white text-blue-100'
             }`}
           >
-            <i className={`${item.icon} w-6 text-center mr-3 text-lg`}></i>
-            {item.name}
+            <i className={`${item.icon} w-6 text-center text-lg ${isCollapsed ? '' : 'mr-3'}`}></i>
+            {!isCollapsed && item.name}
           </Link>
         </li>
       );
@@ -96,12 +112,27 @@ export default function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
-      <aside className="hidden md:flex flex-col w-64 bg-blue-900 text-white shadow-lg">
-        <div className="flex items-center justify-center h-16 border-b border-blue-800">
-          <span className="text-white font-bold text-lg uppercase tracking-wider">Hệ thống QLQL</span>
+      <aside className={`hidden md:flex flex-col bg-blue-900 text-white shadow-lg transition-all duration-200 ${
+        desktopSidebarCollapsed ? 'w-20' : 'w-64'
+      }`}>
+        <div className={`flex items-center h-16 border-b border-blue-800 ${
+          desktopSidebarCollapsed ? 'justify-center px-3' : 'justify-between px-4'
+        }`}>
+          {!desktopSidebarCollapsed && (
+            <span className="truncate text-white font-bold text-lg uppercase tracking-wider">Hệ thống QLQL</span>
+          )}
+          <button
+            type="button"
+            onClick={() => setDesktopSidebarCollapsed((collapsed) => !collapsed)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded text-blue-100 transition-colors hover:bg-blue-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/70"
+            aria-label={desktopSidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
+            title={desktopSidebarCollapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
+          >
+            <i className={`fas ${desktopSidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'} text-sm`}></i>
+          </button>
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1">{renderMenuItems()}</ul>
+          <ul className="space-y-1">{renderMenuItems({ isCollapsed: desktopSidebarCollapsed })}</ul>
         </nav>
       </aside>
 
