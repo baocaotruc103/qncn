@@ -32,9 +32,10 @@ export default function PrintForm({ data }) {
                 .a4-page { width: 196mm; min-height: 283mm; background-color: white; margin: 0 0 6mm 0; padding: 4mm 5mm; box-sizing: border-box; position: relative; overflow: hidden; }
                 @media print {
                     body { background-color: white; padding: 0; }
-                    .print-form-container { width: 196mm; max-width: 196mm; }
-                    .a4-page { box-shadow: none; margin: 0; padding: 4mm 5mm; page-break-after: always; }
+                    .print-form-container { width: auto; max-width: none; }
+                    .a4-page { width: auto; min-height: auto; box-shadow: none; margin: 0; padding: 4mm 5mm; page-break-after: always; }
                     .no-print { display: none !important; }
+                    .overflow-x-auto { overflow: visible !important; }
                 }
                 .section-title { font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #333; margin-top: 10px; margin-bottom: 7px; padding-bottom: 2px; }
                 .field-group { display: flex; align-items: flex-start; margin-bottom: 4px; min-width: 0; }
@@ -47,10 +48,12 @@ export default function PrintForm({ data }) {
                 th, td { border: 0.5pt solid #000 !important; padding: 7px 5px !important; vertical-align: middle !important; overflow: visible; text-overflow: clip; white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; }
                 th { background-color: #f7f7f7; font-weight: bold; text-align: center !important; vertical-align: middle !important; }
                 td { text-align: left !important; }
-                .overflow-x-auto { overflow: visible !important; }
                 .print-break-avoid { page-break-inside: avoid; break-inside: avoid; }
-                .salary-table { font-size: 6.2px !important; line-height: 1.25 !important; }
-                .salary-table th, .salary-table td { padding: 3px !important; }
+                .salary-table { font-size: 5.5px !important; line-height: 1.15 !important; table-layout: fixed !important; width: 100% !important; }
+                .salary-table th, .salary-table td { padding: 2px !important; border: 0.5pt solid #000 !important; }
+                @media print {
+                    .salary-table { font-size: 5.5px !important; table-layout: fixed !important; }
+                }
                 .bold { font-weight: bold; }
                 .italic { font-style: italic; }
                 .text-center { text-align: center !important; }
@@ -271,52 +274,52 @@ export default function PrintForm({ data }) {
 
         <div className="font-bold mt-2 mb-1 text-sm italic">Quá trình công tác và hưởng lương:</div>
         <div className="overflow-x-auto">
-            <table className="salary-table text-[7px] w-full" style={{ tableLayout: "fixed", wordWrap: "break-word" }}>
+            <table className="salary-table text-[6px] w-full" style={{ tableLayout: "fixed", wordWrap: "break-word", minWidth: "280mm" }}>
                 <thead>
                     <tr>
-                        <th className="p-1" style={{width: "5%"}}>Từ tháng</th>
-                        <th className="p-1" style={{width: "5%"}}>Đến tháng</th>
-                        <th className="p-1" style={{width: "8%"}}>ĐV trực thuộc</th>
-                        <th className="p-1" style={{width: "8%"}}>ĐV chi tiết</th>
-                        <th className="p-1" style={{width: "7%"}}>Loại TĐ</th>
-                        <th className="p-1" style={{width: "5%"}}>D.QL</th>
-                        <th className="p-1" style={{width: "5%"}}>D.BT</th>
-                        <th className="p-1" style={{width: "5%"}}>C.Bậc</th>
-                        <th className="p-1" style={{width: "7%"}}>CV,CNQS</th>
-                        <th className="p-1" style={{width: "5%"}}>TN CNQS</th>
-                        <th className="p-1" style={{width: "5%"}}>Ngạch</th>
-                        <th className="p-1" style={{width: "4%"}}>Nhóm</th>
-                        <th className="p-1" style={{width: "4%"}}>Bậc</th>
-                        <th className="p-1" style={{width: "4%"}}>HS</th>
-                        <th className="p-1" style={{width: "4%"}}>VK%</th>
-                        <th className="p-1" style={{width: "4%"}}>BL</th>
-                        <th className="p-1" style={{width: "5%"}}>PC CV</th>
-                        <th className="p-1" style={{width: "5%"}}>TN Nghề</th>
-                        <th className="p-1" style={{width: "5%"}}>TN bđ nhận</th>
+                        <th style={{width: "4.5%", padding: "2px"}}>Từ tháng</th>
+                        <th style={{width: "4.5%", padding: "2px"}}>Đến tháng</th>
+                        <th style={{width: "6%", padding: "2px"}}>ĐV trực thuộc</th>
+                        <th style={{width: "6%", padding: "2px"}}>ĐV chi tiết</th>
+                        <th style={{width: "5.5%", padding: "2px"}}>Loại TĐ</th>
+                        <th style={{width: "4%", padding: "2px"}}>D.QL</th>
+                        <th style={{width: "4%", padding: "2px"}}>D.BT</th>
+                        <th style={{width: "4%", padding: "2px"}}>C.Bậc</th>
+                        <th style={{width: "6%", padding: "2px"}}>CV/CNQS</th>
+                        <th style={{width: "4%", padding: "2px"}}>TN CNQS</th>
+                        <th style={{width: "4.5%", padding: "2px"}}>Ngạch</th>
+                        <th style={{width: "3%", padding: "2px"}}>Nhóm</th>
+                        <th style={{width: "3%", padding: "2px"}}>Bậc</th>
+                        <th style={{width: "3.5%", padding: "2px"}}>HS</th>
+                        <th style={{width: "3.5%", padding: "2px"}}>VK%</th>
+                        <th style={{width: "3.5%", padding: "2px"}}>BL</th>
+                        <th style={{width: "4%", padding: "2px"}}>PC CV</th>
+                        <th style={{width: "4%", padding: "2px"}}>TN Nghề</th>
+                        <th style={{width: "4%", padding: "2px"}}>TN bđ</th>
                     </tr>
                 </thead>
                 <tbody>
                     {safeLuong.length > 0 ? safeLuong.map((l, i) => (
                         <tr key={i}>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.tuThang || l.tu_thang || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.denThang || l.den_thang || ""}</td>
-                            <td className="p-1" style={{wordBreak: 'break-word'}}>{l.capTrucThuoc || l.don_vi_cap_truc_thuoc || ""}</td>
-                            <td className="p-1" style={{wordBreak: 'break-word'}}>{l.donViChiTiet || l.don_vi_chi_tiet || ""}</td>
-                            <td className="p-1" style={{wordBreak: 'break-word'}}>{l.loaiThayDoi || l.loai_thay_doi || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.dienQuanLy || l.dien_quan_ly || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.dienBoTri || l.dien_bo_tri || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.capBac || l.cap_bac || ""}</td>
-                            <td className="p-1" style={{wordBreak: 'break-word'}}>{l.chucVu || l.chuc_vu_cnqs || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.thamNienCNQS || l.tn_dam_nhan_cnqs || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.loaiNgach || l.loai_ngach || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.nhom || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.bac || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.heSo || l.he_so || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.pcVuotKhung || l.pc_vk || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.heSoBaoLuu || l.he_so_bl || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.pcChucVu || l.pc_chuc_vu || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.pcThamNienNghe || l.pc_tn_nghe || ""}</td>
-                            <td className="p-1 text-center" style={{wordBreak: 'break-word'}}>{l.thamNienBatDau || l.tn_bat_dau_dam_nhan || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.tuThang || l.tu_thang || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.denThang || l.den_thang || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px"}}>{l.capTrucThuoc || l.don_vi_cap_truc_thuoc || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px"}}>{l.donViChiTiet || l.don_vi_chi_tiet || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px"}}>{l.loaiThayDoi || l.loai_thay_doi || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.dienQuanLy || l.dien_quan_ly || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.dienBoTri || l.dien_bo_tri || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.capBac || l.cap_bac || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px"}}>{l.chucVu || l.chuc_vu_cnqs || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.thamNienCNQS || l.tn_dam_nhan_cnqs || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.loaiNgach || l.loai_ngach || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.nhom || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.bac || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.heSo || l.he_so || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.pcVuotKhung || l.pc_vk || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.heSoBaoLuu || l.he_so_bl || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.pcChucVu || l.pc_chuc_vu || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.pcThamNienNghe || l.pc_tn_nghe || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.thamNienBatDau || l.tn_bat_dau_dam_nhan || ""}</td>
                         </tr>
                     )) : (
                         <tr>
