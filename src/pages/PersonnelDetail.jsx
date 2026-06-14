@@ -546,7 +546,7 @@ export default function PersonnelDetail() {
                                     </li>
                                     <li className="flex justify-between border-b border-gray-50 pb-2">
                                         <span className="font-medium text-gray-500">Giới tính</span>
-                                        <span className="text-gray-900 font-medium">Nam</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.gioi_tinh || '-'}</span>
                                     </li>
                                     <li className="flex justify-between border-b border-gray-50 pb-2">
                                         <span className="font-medium text-gray-500">Nhóm máu</span>
@@ -662,9 +662,16 @@ export default function PersonnelDetail() {
                                             <div>Tuyển dụng: <span className="text-gray-900 font-medium">{hoSo.tn_tuyen_dung || '-'}</span></div>
                                             <div>Nhập ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_nhap_ngu || '-'}</span></div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500">
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-1">
                                             <div>Xuất ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_xuat_ngu || '-'}</span></div>
                                             <div>Tái ngũ: <span className="text-gray-900 font-medium">{hoSo.tn_tai_ngu || '-'}</span></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-1">
+                                            <div>HSQ-BS sang QNCN: <span className="text-gray-900 font-medium">{hoSo.tn_hsq_bs_sang_qncn || '-'}</span></div>
+                                            <div>HSQ-BS sang CNVQP: <span className="text-gray-900 font-medium">{hoSo.tn_hsq_bs_sang_cnvqp || '-'}</span></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500">
+                                            <div>CNVQP sang QNCN: <span className="text-gray-900 font-medium">{hoSo.tn_cnvqp_sang_qncn || '-'}</span></div>
                                         </div>
                                     </div>
                                     <div className="relative">
