@@ -11,6 +11,8 @@ import TabLuong from '../components/TabLuong';
 import PrintForm from '../components/PrintForm';
 import { useAuth } from '../contexts/authContextBase';
 
+const SALARY_EXPORT_WIDTH_PX = 1046;
+
 const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     const parts = dateStr.split('-');
@@ -561,7 +563,13 @@ export default function PersonnelDetail() {
                 margin: [10, 10, 10, 10], 
                 filename: `BangLuong_${data?.hoSo?.ho_ten_khai_sinh?.replace(/[^a-zA-Z0-9]/g, '_') || 'CanBo'}_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 1122 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    windowWidth: SALARY_EXPORT_WIDTH_PX,
+                    width: SALARY_EXPORT_WIDTH_PX,
+                    scrollX: 0
+                },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
             };
 
@@ -1149,13 +1157,13 @@ export default function PersonnelDetail() {
                 </div>
                 
                 {/* Bảng lương để in */}
-                <div ref={pdfLuongRef} className="p-4 bg-white text-black" style={{ width: '1122px', color: 'black', boxSizing: 'border-box' }}>
+                <div ref={pdfLuongRef} className="p-4 bg-white text-black" style={{ width: `${SALARY_EXPORT_WIDTH_PX}px`, color: 'black', boxSizing: 'border-box', overflow: 'hidden' }}>
                     <h1 className="text-center text-xl font-bold uppercase mb-4">BẢNG QUÁ TRÌNH CÔNG TÁC VÀ HƯỞNG LƯƠNG</h1>
                     <div className="flex justify-between mb-4 text-sm">
                         <p><span className="font-bold">Họ và tên:</span> {hoSo?.ho_ten_khai_sinh}</p>
                         <p><span className="font-bold">Đơn vị:</span> {hoSo?.don_vi}</p>
                     </div>
-                    <table className="text-left border-collapse" style={{ border: '1px solid black', width: 'calc(100% - 8px)', tableLayout: 'fixed', wordWrap: 'break-word', fontSize: '9px', lineHeight: '1.2' }}>
+                    <table className="w-full text-left border-collapse" style={{ border: '1px solid black', tableLayout: 'fixed', wordWrap: 'break-word', fontSize: '9px', lineHeight: '1.2' }}>
                         <thead className="bg-gray-100 text-center" style={{ backgroundColor: '#f3f4f6' }}>
                             <tr>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>Từ tháng</th>
