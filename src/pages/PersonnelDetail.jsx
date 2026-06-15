@@ -420,15 +420,27 @@ export default function PersonnelDetail() {
         }
         
         const clone = element.cloneNode(true);
+        clone.querySelectorAll('style').forEach(style => style.remove());
+        const wordPages = clone.querySelectorAll('.a4-page');
+        wordPages[wordPages.length - 1]?.classList.add('word-last-page');
+
+        const sectionTitles = clone.querySelectorAll('.section-title');
+        sectionTitles.forEach(section => {
+            if (section.textContent.trim().startsWith('VII.')) {
+                section.classList.add('word-page-break');
+            }
+        });
+
         const grids = clone.querySelectorAll('.grid');
         grids.forEach(grid => {
             const container = document.createElement('div');
             
             let currentTable = document.createElement('table');
+            currentTable.className = 'word-fields';
             currentTable.style.width = '100%';
             currentTable.style.borderCollapse = 'collapse';
             currentTable.style.border = 'none';
-            currentTable.style.marginBottom = '5px';
+            currentTable.style.marginBottom = '2px';
             let tr = document.createElement('tr');
             let currentCols = 0;
             
@@ -442,10 +454,11 @@ export default function PersonnelDetail() {
                     container.appendChild(currentTable);
                     
                     currentTable = document.createElement('table');
+                    currentTable.className = 'word-fields';
                     currentTable.style.width = '100%';
                     currentTable.style.borderCollapse = 'collapse';
                     currentTable.style.border = 'none';
-                    currentTable.style.marginBottom = '5px';
+                    currentTable.style.marginBottom = '2px';
                     tr = document.createElement('tr');
                     currentCols = 0;
                 }
@@ -462,10 +475,10 @@ export default function PersonnelDetail() {
                     
                     if (label && value) {
                         const labelHtml = label.innerHTML;
-                        const valueHtml = value.innerHTML;
+                        const valueHtml = value.innerHTML.trim();
                         const align = value.classList.contains('text-center') ? 'center' : 'left';
                         
-                        let valueStyles = `border-bottom: 1px dotted black; text-align: ${align}; vertical-align: bottom;`;
+                        let valueStyles = `padding-bottom: 2pt; text-align: ${align}; vertical-align: bottom;`;
                         if (value.classList.contains('bold')) valueStyles += ' font-weight: bold;';
                         if (value.classList.contains('uppercase')) valueStyles += ' text-transform: uppercase;';
                         if (value.classList.contains('italic')) valueStyles += ' font-style: italic;';
@@ -476,10 +489,10 @@ export default function PersonnelDetail() {
                         if (label.classList.contains('underline')) labelStyles += ' text-decoration: underline;';
 
                         td.innerHTML = `
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0; padding: 0; border: none;">
+                            <table class="word-inline-field" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0; padding: 0; border: none;">
                                 <tr>
                                     <td style="${labelStyles}">${labelHtml}</td>
-                                    <td style="${valueStyles}">${valueHtml}</td>
+                                    <td class="word-field-value" style="${valueStyles}"><span class="word-field-content">${valueHtml}</span></td>
                                 </tr>
                             </table>
                         `;
@@ -511,26 +524,134 @@ export default function PersonnelDetail() {
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head>
                 <meta charset='utf-8'>
-                <title>Export HTML To Doc</title>
+                <title>Lý lịch trích ngang</title>
                 <style>
-                    body { font-family: "Times New Roman", Times, serif; font-size: 12pt; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
-                    th, td { border: 1px solid black; padding: 5px; text-align: left; vertical-align: top; }
-                    th { font-weight: bold; background-color: #f7f7f7; text-align: center; border-style: solid; }
-                    .section-title { font-size: 14pt; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid black; margin-top: 15px; margin-bottom: 10px; padding-bottom: 2px; }
-                    .field-group { margin-bottom: 5px; }
+                    @page Section1 {
+                        size: 595.3pt 841.9pt;
+                        margin: 28.35pt 36pt 28.35pt 36pt;
+                        mso-page-orientation: portrait;
+                    }
+                    div.Section1 { page: Section1; }
+                    body {
+                        font-family: "Times New Roman", Times, serif;
+                        font-size: 11pt;
+                        line-height: 1.08;
+                        color: #000;
+                        width: ${SALARY_EXPORT_WIDTH_PX}px;
+                        max-width: ${SALARY_EXPORT_WIDTH_PX}px;
+                        margin: 0 auto;
+                    }
+                    .Section1, .print-form-container, .a4-page {
+                        width: ${SALARY_EXPORT_WIDTH_PX}px !important;
+                        max-width: ${SALARY_EXPORT_WIDTH_PX}px !important;
+                        min-height: 0 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        overflow: visible !important;
+                        box-sizing: border-box !important;
+                    }
+                    .a4-page { page-break-after: always; }
+                    .a4-page:last-child, .word-last-page { page-break-after: auto; }
+                    h1 {
+                        font-size: 14pt;
+                        line-height: 1.1;
+                        text-align: center;
+                        margin: 0 0 15pt 0;
+                    }
+                    table {
+                        width: 100% !important;
+                        max-width: 100% !important;
+                        min-width: 0 !important;
+                        border-collapse: collapse;
+                        table-layout: fixed;
+                        margin: 3pt 0 7pt 0;
+                        font-size: 11pt;
+                        line-height: 1.05;
+                        box-sizing: border-box;
+                    }
+                    th, td {
+                        border: 0.75pt solid #000;
+                        padding: 3pt 2.5pt;
+                        text-align: left;
+                        vertical-align: middle;
+                        overflow-wrap: break-word;
+                    }
+                    th {
+                        font-weight: bold;
+                        background-color: #f2f2f2;
+                        text-align: center;
+                    }
+                    .section-title {
+                        font-size: 11pt;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        text-decoration: underline;
+                        border-bottom: 0 !important;
+                        margin: 9pt 0 5pt 0;
+                        padding-bottom: 0;
+                        page-break-after: avoid;
+                    }
+                    .word-page-break {
+                        page-break-before: always;
+                        margin-top: 0;
+                    }
+                    .word-fields, .word-inline-field {
+                        border: 0 !important;
+                        margin: 0 0 2pt 0 !important;
+                        table-layout: fixed;
+                        font-size: 11pt;
+                    }
+                    .word-fields td, .word-inline-field td {
+                        border: 0 !important;
+                        padding: 1.5pt 4pt 1.5pt 0 !important;
+                        vertical-align: bottom;
+                    }
+                    .word-inline-field td:last-child {
+                        padding-bottom: 2pt !important;
+                    }
+                    .word-field-value {
+                        white-space: normal;
+                    }
+                    .word-field-content { vertical-align: baseline; }
+                    .field-group { margin-bottom: 2pt; }
                     .field-label { font-weight: bold; margin-right: 5px; }
-                    .field-value { display: inline-block; border-bottom: 1px dotted black; min-width: 50px; }
+                    .field-value {
+                        display: inline-block;
+                        min-width: 35pt;
+                        padding-bottom: 2pt;
+                    }
                     .text-center { text-align: center; }
                     .bold { font-weight: bold; }
                     .uppercase { text-transform: uppercase; }
                     .italic { font-style: italic; }
                     .underline { text-decoration: underline; }
+                    .font-bold { font-weight: bold; }
+                    .text-sm { font-size: 11pt; }
+                    .text-xs { font-size: 11pt; }
+                    .mt-2, .mt-4, .mt-6 { margin-top: 6pt; }
+                    .mb-1, .mb-2, .mb-4, .mb-6 { margin-bottom: 4pt; }
+                    .flex.justify-end { text-align: right; margin-top: 16pt; }
+                    .flex.justify-end > div { display: inline-block; text-align: center; min-width: 180pt; }
+                    .salary-table {
+                        width: 100% !important;
+                        min-width: 0 !important;
+                        table-layout: fixed !important;
+                        font-size: 6pt !important;
+                        line-height: 1 !important;
+                        margin-top: 4pt !important;
+                    }
+                    .salary-table th, .salary-table td {
+                        padding: 1pt !important;
+                        font-size: 6pt !important;
+                        border: 0.5pt solid #000 !important;
+                        vertical-align: middle !important;
+                    }
+                    tr { page-break-inside: avoid; }
                 </style>
             </head>
-            <body>
+            <body><div class="Section1">
                 ${clone.innerHTML}
-            </body>
+            </div></body>
             </html>
         `;
 
@@ -545,6 +666,7 @@ export default function PersonnelDetail() {
         downloadLink.download = fileName;
         downloadLink.click();
         document.body.removeChild(downloadLink);
+        setTimeout(() => URL.revokeObjectURL(downloadLink.href), 1000);
     };
 
     const handleExportLuongTable = async () => {
