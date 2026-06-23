@@ -342,7 +342,7 @@ export default function TabGiaDinh({ initialData = [] }) {
                                                 <i className="fas fa-arrow-down"></i>
                                             </button>
                                             <button type="button" onClick={() => removeRow(row.id)} className="text-red-500 hover:bg-red-200 bg-red-100 p-1 px-2 rounded transition-colors" title="Xóa dòng">
-                                                <i className="fas fa-trash"></i>
+                                                <i className="fas fa-trash mr-1"></i>XÃ³a
                                             </button>
                                         </div>
                                     </td>

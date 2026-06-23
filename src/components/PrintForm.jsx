@@ -1,3 +1,5 @@
+import { sortByTimelineDesc } from '../utils/dateSort';
+
 export default function PrintForm({ data }) {
     if (!data || !data.hoSo) return null;
     const { hoSo, daoTao, giaDinh, khenThuong, kyLuat, luong } = data;
@@ -21,9 +23,9 @@ export default function PrintForm({ data }) {
 
     const safeDaoTao = daoTao || [];
     const safeGiaDinh = giaDinh || [];
-    const safeKhen = khenThuong || [];
+    const safeKhen = sortByTimelineDesc(khenThuong, item => item.ngayThangNam || item.ngay);
     const safeKy = kyLuat || [];
-    const safeLuong = luong || [];
+    const safeLuong = sortByTimelineDesc(luong, item => item.tuThang || item.tu_thang);
 
     return (
         <div className="print-form-container bg-white text-black text-sm" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
@@ -287,10 +289,8 @@ export default function PrintForm({ data }) {
                         <th style={{width: "3.8%", padding: "2px"}}>C.Bậc</th>
                         <th style={{width: "5.2%", padding: "2px"}}>CV/CNQS</th>
                         <th style={{width: "3.8%", padding: "2px"}}>TN CNQS</th>
-                        <th style={{width: "4.2%", padding: "2px"}}>Ngạch</th>
+                        <th style={{width: "10.2%", padding: "2px"}}>Ngạch/Bậc/Hệ số</th>
                         <th style={{width: "2.8%", padding: "2px"}}>Nhóm</th>
-                        <th style={{width: "2.8%", padding: "2px"}}>Bậc</th>
-                        <th style={{width: "3.2%", padding: "2px"}}>HS</th>
                         <th style={{width: "3.2%", padding: "2px"}}>VK%</th>
                         <th style={{width: "3.2%", padding: "2px"}}>BL</th>
                         <th style={{width: "3.8%", padding: "2px"}}>PC CV</th>
@@ -311,10 +311,8 @@ export default function PrintForm({ data }) {
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.capBac || l.cap_bac || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px"}}>{l.chucVu || l.chuc_vu_cnqs || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.thamNienCNQS || l.tn_dam_nhan_cnqs || ""}</td>
-                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.loaiNgach || l.loai_ngach || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{(l.loaiNgach || l.loai_ngach || '') + ((l.bac || '') ? ' / ' + (l.bac) : '') + ((l.heSo || l.he_so) ? ' / ' + (l.heSo || l.he_so) : '')}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.nhom || ""}</td>
-                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.bac || ""}</td>
-                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.heSo || l.he_so || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.pcVuotKhung || l.pc_vk || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.heSoBaoLuu || l.he_so_bl || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.pcChucVu || l.pc_chuc_vu || ""}</td>
@@ -330,11 +328,11 @@ export default function PrintForm({ data }) {
             </table>
         </div>
         
-        <div className="flex justify-end mt-12">
+        <div className="flex justify-end mt-16">
             <div className="text-center">
                 <p className="italic mb-1">........, ngày ..... tháng ..... năm .......</p>
                 <p className="font-bold">Người khai</p>
-                <p className="italic text-xs mb-12">(Ký và ghi rõ họ tên)</p>
+                <p className="italic text-xs mb-20">(Ký và ghi rõ họ tên)</p>
                 <p className="font-bold">{hoSo.ho_ten_khai_sinh || ""} </p>
             </div>
         </div>

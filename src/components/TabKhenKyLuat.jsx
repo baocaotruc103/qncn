@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
+import { sortByTimelineDesc } from '../utils/dateSort';
 
 const emptyFormData = {
     ngayThangNam: '',
@@ -10,7 +11,7 @@ const emptyFormData = {
 };
 
 function mapInitialRows(data) {
-    return data.map(item => ({
+    return sortByTimelineDesc(data.map(item => ({
         id: item.id || crypto.randomUUID(),
         ngayThangNam: item.ngay || '',
         danhGiaXepLoai: item.danh_gia_xep_loai || '',
@@ -19,7 +20,7 @@ function mapInitialRows(data) {
         cap: item.cap || '',
         file_dinh_kem: item.file_dinh_kem || '',
         file_ten_goc: item.file_ten_goc || ''
-    }));
+    })), row => row.ngayThangNam);
 }
 
 export default function TabKhenKyLuat({ initialKhenThuong = [], initialKyLuat = [], initialHoSo = {} }) {
@@ -107,7 +108,10 @@ export default function TabKhenKyLuat({ initialKhenThuong = [], initialKyLuat = 
 
     const updateRowField = (type, id, field, value) => {
         const setter = type === 'khen' ? setKhenThuongRows : setKyLuatRows;
-        setter(prev => prev.map(row => (row.id === id ? { ...row, [field]: value } : row)));
+        setter(prev => sortByTimelineDesc(
+            prev.map(row => (row.id === id ? { ...row, [field]: value } : row)),
+            row => row.ngayThangNam
+        ));
     };
 
     const handleSaveModal = (e) => {
@@ -120,10 +124,11 @@ export default function TabKhenKyLuat({ initialKhenThuong = [], initialKyLuat = 
             file_ten_goc: existingRow?.file_ten_goc || ''
         };
 
-        setActiveRows(prev => (
+        setActiveRows(prev => sortByTimelineDesc(
             editingRowId
                 ? prev.map(row => (row.id === editingRowId ? nextRow : row))
-                : [...prev, nextRow]
+                : [...prev, nextRow],
+            row => row.ngayThangNam
         ));
         closeModal();
     };
@@ -133,18 +138,7 @@ export default function TabKhenKyLuat({ initialKhenThuong = [], initialKyLuat = 
         setter(prev => prev.filter(row => row.id !== id));
     };
 
-    const moveRow = (type, index, direction) => {
-        const setter = type === 'khen' ? setKhenThuongRows : setKyLuatRows;
-        setter(prev => {
-            const targetIndex = index + direction;
-            if (targetIndex < 0 || targetIndex >= prev.length) return prev;
-            const nextRows = [...prev];
-            [nextRows[index], nextRows[targetIndex]] = [nextRows[targetIndex], nextRows[index]];
-            return nextRows;
-        });
-    };
-
-    const renderRow = (type, row, index, totalRows) => (
+    const renderRow = (type, row) => (
         <tr key={row.id} className="border-b bg-white hover:bg-gray-50 relative">
             <td className="p-2 border align-top"><input type="date" className="w-full border-gray-300 rounded text-sm p-1" value={row.ngayThangNam} onChange={(e) => updateRowField(type, row.id, 'ngayThangNam', e.target.value)} /></td>
             <td className="p-2 border align-top"><input type="text" list="danhGiaList" className="w-full border-gray-300 rounded text-sm p-1" value={row.danhGiaXepLoai} onChange={(e) => updateRowField(type, row.id, 'danhGiaXepLoai', e.target.value)} /></td>
@@ -166,8 +160,6 @@ export default function TabKhenKyLuat({ initialKhenThuong = [], initialKyLuat = 
             <td className="p-2 border text-center">
                 <div className="flex items-center justify-center gap-1">
                     <button type="button" onClick={() => openEditModal(type, row)} className="text-blue-600 hover:bg-blue-100 bg-blue-50 p-1 px-2 rounded transition-colors" title="Sửa dòng"><i className="fas fa-pen"></i></button>
-                    <button type="button" onClick={() => moveRow(type, index, -1)} disabled={index === 0} className="text-gray-700 hover:bg-gray-200 bg-gray-100 p-1 px-2 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Di chuyển lên"><i className="fas fa-arrow-up"></i></button>
-                    <button type="button" onClick={() => moveRow(type, index, 1)} disabled={index === totalRows - 1} className="text-gray-700 hover:bg-gray-200 bg-gray-100 p-1 px-2 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Di chuyển xuống"><i className="fas fa-arrow-down"></i></button>
                     <button type="button" onClick={() => removeRow(type, row.id)} className="text-red-500 hover:bg-red-200 bg-red-100 p-1 px-2 rounded transition-colors" title="Xóa dòng"><i className="fas fa-trash"></i></button>
                 </div>
             </td>
@@ -180,7 +172,7 @@ export default function TabKhenKyLuat({ initialKhenThuong = [], initialKyLuat = 
                 <tr>
                     <td colSpan="7" className="p-4 text-center text-gray-500 italic">{emptyText}</td>
                 </tr>
-            ) : rows.map((row, index) => renderRow(type, row, index, rows.length))}
+            ) : rows.map(row => renderRow(type, row))}
         </tbody>
     );
 

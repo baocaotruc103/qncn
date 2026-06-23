@@ -10,6 +10,7 @@ import TabNhanDang from '../components/TabNhanDang';
 import TabLuong from '../components/TabLuong';
 import PrintForm from '../components/PrintForm';
 import { useAuth } from '../contexts/authContextBase';
+import { sortByTimelineDesc } from '../utils/dateSort';
 
 const SALARY_EXPORT_WIDTH_PX = 1046;
 
@@ -739,6 +740,8 @@ export default function PersonnelDetail() {
     }
 
     const { hoSo, daoTao, giaDinh, khenThuong, kyLuat, luong } = data;
+    const sortedKhenThuong = sortByTimelineDesc(khenThuong, item => item.ngay);
+    const sortedLuong = sortByTimelineDesc(luong, item => item.tu_thang);
 
     return (
         <div className="bg-slate-50 min-h-screen text-gray-800 antialiased pb-20 -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
@@ -782,6 +785,11 @@ export default function PersonnelDetail() {
                 .pdf-form-mode label {
                     color: black !important;
                     font-weight: 600;
+                }
+
+                /* Increase table font size in detail view for better readability */
+                .bg-slate-50 table, .bg-slate-50 table th, .bg-slate-50 table td {
+                    font-size: 13px !important;
                 }
 
                 @media print {
@@ -845,11 +853,10 @@ export default function PersonnelDetail() {
                         </h1>
                     </div>
 
-                    <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        
-                        <div className="lg:col-span-4 space-y-8">
-                            
-                            <div className="print-break-avoid">
+                    <div className="p-6 sm:p-8 space-y-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <div className="lg:col-span-4">
+<div className="print-break-avoid">
                                 <h2 className="text-lg font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-4 flex items-center">
                                     <span className="bg-blue-100 text-blue-700 p-2 rounded-lg mr-3"><i className="fas fa-info-circle w-4 h-4 flex items-center justify-center"></i></span> Thông tin cá nhân
                                 </h2>
@@ -892,95 +899,10 @@ export default function PersonnelDetail() {
                                     </li>
                                 </ul>
                             </div>
-
-                            <div className="print-break-avoid">
-                                <h2 className="text-lg font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-4 flex items-center">
-                                    <span className="bg-blue-100 text-blue-700 p-2 rounded-lg mr-3"><i className="fas fa-map-marker-alt w-4 h-4 flex items-center justify-center"></i></span> Địa chỉ liên hệ
-                                </h2>
-                                <div className="space-y-4 text-sm">
-                                    <div>
-                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-home mr-1 opacity-50"></i> Quê quán</p>
-                                        <p className="text-gray-900 font-medium">{hoSo.que_quan || '-'}</p>
-                                    </div>
-                                    <div className="pt-2 border-t border-gray-100">
-                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-id-card mr-1 opacity-50"></i> Nơi thường trú</p>
-                                        <p className="text-gray-900 font-medium">{hoSo.noi_thuong_tru_chi_tiet ? `${hoSo.noi_thuong_tru_chi_tiet}, ` : ''}{hoSo.noi_thuong_tru || '-'}</p>
-                                    </div>
-                                    <div className="pt-2 border-t border-gray-100">
-                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-building mr-1 opacity-50"></i> Nơi tạm trú</p>
-                                        <p className="text-gray-900 font-medium">{hoSo.noi_tam_tru_chi_tiet ? `${hoSo.noi_tam_tru_chi_tiet}, ` : ''}{hoSo.noi_tam_tru || '-'}</p>
-                                    </div>
-                                    <div className="pt-2 border-t border-gray-100">
-                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-map-pin mr-1 opacity-50"></i> Nơi ở hiện tại</p>
-                                        <p className="text-gray-900 font-medium">{hoSo.noi_o_hien_tai_chi_tiet ? `${hoSo.noi_o_hien_tai_chi_tiet}, ` : ''}{hoSo.noi_o_hien_tai || '-'}</p>
-                                    </div>
-                                </div>
                             </div>
 
-                            <div className="print-break-avoid">
-                                <h2 className="text-lg font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-4 flex items-center">
-                                    <span className="bg-blue-100 text-blue-700 p-2 rounded-lg mr-3"><i className="fas fa-id-badge w-4 h-4 flex items-center justify-center"></i></span> Giấy tờ tùy thân
-                                </h2>
-                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm mb-4">
-                                    <p className="font-semibold text-gray-800 mb-1">Căn cước công dân</p>
-                                    <p className="text-xl font-bold text-blue-800 tracking-wider mb-2">{hoSo.so_cccd || '...'}</p>
-                                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-2">
-                                        <div>Cấp: <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_cap_cccd)}</span></div>
-                                        <div>Hết hạn: <span className="text-gray-900 font-medium">{formatDate(hoSo.han_su_dung_cccd)}</span></div>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">Nơi cấp: {hoSo.noi_cap_cccd || '-'}</p>
-                                </div>
-                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm">
-                                    <p className="font-semibold text-gray-800 mb-1">CMQNCN / CMSQ</p>
-                                    <p className="text-xl font-bold text-green-700 tracking-wider mb-2">{hoSo.so_cmqncn_cmsq || '...'}</p>
-                                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-2">
-                                        <div>Cấp: <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_cap_cmqncn_cmsq)}</span></div>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">Nơi cấp: {hoSo.noi_cap_cmqncn_cmsq || '-'}</p>
-                                </div>
-                            </div>
-
-                            <div className="print-break-avoid">
-                                <h2 className="text-lg font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-4 flex items-center">
-                                    <span className="bg-blue-100 text-blue-700 p-2 rounded-lg mr-3"><i className="fas fa-heartbeat w-4 h-4 flex items-center justify-center"></i></span> Nhận dạng & Sức khỏe
-                                </h2>
-                                <ul className="space-y-3 text-sm text-gray-600">
-                                    <li className="flex justify-between border-b border-gray-50 pb-2">
-                                        <span className="font-medium text-gray-500">Sức khỏe</span>
-                                        <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded">{hoSo.thong_tin_suc_khoe || '-'}</span>
-                                    </li>
-                                    <li className="flex justify-between border-b border-gray-50 pb-2">
-                                        <span className="font-medium text-gray-500">Chiều cao</span>
-                                        <span className="text-gray-900 font-medium">{hoSo.chieu_cao_m ? `${hoSo.chieu_cao_m} m` : '-'}</span>
-                                    </li>
-                                    <li className="flex justify-between border-b border-gray-50 pb-2">
-                                        <span className="font-medium text-gray-500">Sống mũi</span>
-                                        <span className="text-gray-900 font-medium">{hoSo.song_mui || '-'}</span>
-                                    </li>
-                                    <li className="flex justify-between border-b border-gray-50 pb-2">
-                                        <span className="font-medium text-gray-500">Nếp tai dưới</span>
-                                        <span className="text-gray-900 font-medium">{hoSo.nep_tai_duoi || '-'}</span>
-                                    </li>
-                                    <li className="flex justify-between border-b border-gray-50 pb-2">
-                                        <span className="font-medium text-gray-500">Dái tai</span>
-                                        <span className="text-gray-900 font-medium">{hoSo.dai_tai || '-'}</span>
-                                    </li>
-                                    <li className="flex justify-between border-b border-gray-50 pb-2">
-                                        <span className="font-medium text-gray-500">Dấu vết riêng</span>
-                                        <span className="text-gray-900 font-medium text-right w-1/2">{hoSo.dau_vet_rieng || '-'}</span>
-                                    </li>
-                                    <li className="flex justify-between">
-                                        <span className="font-medium text-gray-500">Hạn dùng (CMTQĐ)</span>
-                                        <span className="text-gray-900 font-medium">{hoSo.han_dung || '-'}</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                        </div>
-
-                        <div className="lg:col-span-8 space-y-8">
-                            
-                            <div className="print-break-avoid">
+                            <div className="lg:col-span-8">
+<div className="print-break-avoid">
                                 <h2 className="text-xl font-bold text-gray-800 border-b-2 border-gray-100 pb-2 mb-5 flex items-center uppercase tracking-wide">
                                     <i className="fas fa-flag text-blue-600 mr-2"></i> Trục thời gian Đảng / Đoàn
                                 </h2>
@@ -1020,8 +942,98 @@ export default function PersonnelDetail() {
                                     </div>
                                 </div>
                             </div>
+                            </div>
+                        </div>
 
-                            <div className="print-break-avoid">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div>
+<div className="print-break-avoid">
+                                <h2 className="text-lg font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-4 flex items-center">
+                                    <span className="bg-blue-100 text-blue-700 p-2 rounded-lg mr-3"><i className="fas fa-map-marker-alt w-4 h-4 flex items-center justify-center"></i></span> Địa chỉ liên hệ
+                                </h2>
+                                <div className="space-y-4 text-sm">
+                                    <div>
+                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-home mr-1 opacity-50"></i> Quê quán</p>
+                                        <p className="text-gray-900 font-medium">{hoSo.que_quan || '-'}</p>
+                                    </div>
+                                    <div className="pt-2 border-t border-gray-100">
+                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-id-card mr-1 opacity-50"></i> Nơi thường trú</p>
+                                        <p className="text-gray-900 font-medium">{hoSo.noi_thuong_tru_chi_tiet ? `${hoSo.noi_thuong_tru_chi_tiet}, ` : ''}{hoSo.noi_thuong_tru || '-'}</p>
+                                    </div>
+                                    <div className="pt-2 border-t border-gray-100">
+                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-building mr-1 opacity-50"></i> Nơi tạm trú</p>
+                                        <p className="text-gray-900 font-medium">{hoSo.noi_tam_tru_chi_tiet ? `${hoSo.noi_tam_tru_chi_tiet}, ` : ''}{hoSo.noi_tam_tru || '-'}</p>
+                                    </div>
+                                    <div className="pt-2 border-t border-gray-100">
+                                        <p className="font-medium text-gray-500 mb-1"><i className="fas fa-map-pin mr-1 opacity-50"></i> Nơi ở hiện tại</p>
+                                        <p className="text-gray-900 font-medium">{hoSo.noi_o_hien_tai_chi_tiet ? `${hoSo.noi_o_hien_tai_chi_tiet}, ` : ''}{hoSo.noi_o_hien_tai || '-'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                            <div>
+<div className="print-break-avoid">
+                                <h2 className="text-lg font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-4 flex items-center">
+                                    <span className="bg-blue-100 text-blue-700 p-2 rounded-lg mr-3"><i className="fas fa-id-badge w-4 h-4 flex items-center justify-center"></i></span> Giấy tờ tùy thân
+                                </h2>
+                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm mb-4">
+                                    <p className="font-semibold text-gray-800 mb-1">Căn cước công dân</p>
+                                    <p className="text-xl font-bold text-blue-800 tracking-wider mb-2">{hoSo.so_cccd || '...'}</p>
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-2">
+                                        <div>Cấp: <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_cap_cccd)}</span></div>
+                                        <div>Hết hạn: <span className="text-gray-900 font-medium">{formatDate(hoSo.han_su_dung_cccd)}</span></div>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Nơi cấp: {hoSo.noi_cap_cccd || '-'}</p>
+                                </div>
+                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 text-sm">
+                                    <p className="font-semibold text-gray-800 mb-1">CMQNCN / CMSQ</p>
+                                    <p className="text-xl font-bold text-green-700 tracking-wider mb-2">{hoSo.so_cmqncn_cmsq || '...'}</p>
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-2">
+                                        <div>Cấp: <span className="text-gray-900 font-medium">{formatDate(hoSo.ngay_cap_cmqncn_cmsq)}</span></div>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Nơi cấp: {hoSo.noi_cap_cmqncn_cmsq || '-'}</p>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+
+<div className="print-break-avoid">
+                                <h2 className="text-lg font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-4 flex items-center">
+                                    <span className="bg-blue-100 text-blue-700 p-2 rounded-lg mr-3"><i className="fas fa-heartbeat w-4 h-4 flex items-center justify-center"></i></span> Nhận dạng & Sức khỏe
+                                </h2>
+                                <ul className="space-y-3 text-sm text-gray-600">
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Sức khỏe</span>
+                                        <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded">{hoSo.thong_tin_suc_khoe || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Chiều cao</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.chieu_cao_m ? `${hoSo.chieu_cao_m} m` : '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Sống mũi</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.song_mui || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Nếp tai dưới</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.nep_tai_duoi || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Dái tai</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.dai_tai || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between border-b border-gray-50 pb-2">
+                                        <span className="font-medium text-gray-500">Dấu vết riêng</span>
+                                        <span className="text-gray-900 font-medium text-right w-1/2">{hoSo.dau_vet_rieng || '-'}</span>
+                                    </li>
+                                    <li className="flex justify-between">
+                                        <span className="font-medium text-gray-500">Hạn dùng (CMTQĐ)</span>
+                                        <span className="text-gray-900 font-medium">{hoSo.han_dung || '-'}</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+<div className="print-break-avoid">
                                 <h2 className="text-xl font-bold text-gray-800 border-b-2 border-gray-100 pb-2 mb-5 flex items-center uppercase tracking-wide mt-8">
                                     <i className="fas fa-graduation-cap text-blue-600 mr-2"></i> Quá trình Đào tạo
                                 </h2>
@@ -1073,7 +1085,7 @@ export default function PersonnelDetail() {
                                 )}
                             </div>
 
-                            <div className="print-break-avoid">
+<div className="print-break-avoid">
                                 <h2 className="text-xl font-bold text-gray-800 border-b-2 border-gray-100 pb-2 mb-5 flex items-center uppercase tracking-wide mt-8">
                                     <i className="fas fa-star text-yellow-500 mr-2"></i> Thành tích & Kỷ luật
                                 </h2>
@@ -1097,9 +1109,9 @@ export default function PersonnelDetail() {
                                     </div>
                                 </div>
 
-                                {khenThuong.length > 0 ? (
+                                {sortedKhenThuong.length > 0 ? (
                                     <div className="relative pl-6 border-l-2 border-green-200 space-y-4">
-                                        {khenThuong.map((kt) => {
+                                        {sortedKhenThuong.map((kt) => {
                                             const formattedDate = formatDate(kt.ngay);
                                             const subTitle = [formattedDate !== '-' ? formattedDate : '', kt.danh_gia_xep_loai].filter(Boolean).join(' • ');
                                             
@@ -1140,7 +1152,7 @@ export default function PersonnelDetail() {
                                 </div>
                             </div>
 
-                            <div className="print-break-avoid" style={{ pageBreakBefore: 'always' }}>
+<div className="print-break-avoid" style={{ pageBreakBefore: 'always' }}>
                                 <h2 className="text-xl font-bold text-gray-800 border-b-2 border-gray-100 pb-2 mb-5 flex items-center uppercase tracking-wide mt-8">
                                     <i className="fas fa-users text-blue-600 mr-2"></i> Quan hệ gia đình
                                 </h2>
@@ -1188,10 +1200,7 @@ export default function PersonnelDetail() {
                                     <p className="text-sm text-gray-500 italic">Chưa có thông tin gia đình.</p>
                                 )}
                             </div>
-
-                        </div>
                     </div>
-
                     <div className="p-6 sm:p-8 bg-gray-50 border-t border-gray-100">
                         <div className="print-break-avoid">
                             <h2 className="text-xl font-bold text-gray-800 border-b-2 border-gray-200 pb-2 mb-5 flex items-center uppercase tracking-wide">
@@ -1204,7 +1213,7 @@ export default function PersonnelDetail() {
                                 <div className="flex items-center"><i className="fas fa-book-medical text-gray-400 mr-2 text-lg"></i> <div><p className="text-xs text-gray-500 font-medium">Sổ BHXH/BHYT</p><p className="font-bold text-gray-800">{hoSo.so_so_bhxh || '-'}</p></div></div>
                             </div>
 
-                            {luong.length > 0 ? (
+                            {sortedLuong.length > 0 ? (
                                 <div className="overflow-x-auto custom-scrollbar bg-white rounded-xl border border-gray-200 shadow-sm">
                                     <table className="w-full text-sm text-left whitespace-nowrap">
                                         <thead className="bg-blue-50 text-blue-900 border-b border-blue-100">
@@ -1213,13 +1222,12 @@ export default function PersonnelDetail() {
                                                 <th className="px-4 py-3 font-semibold">Thời gian</th>
                                                 <th className="px-4 py-3 font-semibold">Đơn vị công tác</th>
                                                 <th className="px-4 py-3 font-semibold">Cấp bậc / Chức vụ</th>
-                                                <th className="px-4 py-3 font-semibold text-center">Ngạch/Bậc</th>
-                                                <th className="px-4 py-3 font-semibold text-center rounded-tr-xl">Hệ số</th>
+                                                <th className="px-4 py-3 font-semibold text-left min-w-[180px]">Ngạch/Bậc/Hệ số</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
-                                            {luong.map((l, index) => {
-                                                const isLatest = index === luong.length - 1;
+                                            {sortedLuong.map((l, index) => {
+                                                const isLatest = index === 0;
                                                 return (
                                                     <tr key={l.id} className={`hover:bg-gray-50 transition-colors ${isLatest ? 'bg-blue-50/30' : ''}`}>
                                                         <td className="px-4 py-3 text-center text-gray-400 font-medium">{index + 1}</td>
@@ -1237,11 +1245,14 @@ export default function PersonnelDetail() {
                                                             <p className="font-bold text-gray-800">{l.chuc_vu_cnqs || '-'}</p>
                                                             <p className="text-xs text-blue-600 font-medium">{l.cap_bac || '-'} {l.loai_thay_doi ? `(${l.loai_thay_doi})` : ''}</p>
                                                         </td>
-                                                        <td className="px-4 py-3 text-center">
-                                                            <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">{l.loai_ngach || '-'}</span><br/>
-                                                            <span className="text-xs font-medium text-gray-500 mt-1 inline-block">{l.bac || '-'}/{l.nhom || '-'}</span>
+                                                        <td className="px-4 py-3 text-left align-top">
+                                                            <div className="space-y-1 text-xs leading-snug">
+                                                                <div><span className="font-semibold text-gray-500">Loại ngạch:</span> <span className="font-bold text-gray-800">{l.loai_ngach || '-'}</span></div>
+                                                                <div><span className="font-semibold text-gray-500">Nhóm:</span> <span className="text-gray-800">{l.nhom || '-'}</span></div>
+                                                                <div><span className="font-semibold text-gray-500">Bậc - Hệ số:</span> <span className="text-blue-700 font-bold">{l.bac || '-'} - {l.he_so ? Number(l.he_so).toFixed(2) : '-'}</span></div>
+                                                            </div>
                                                         </td>
-                                                        <td className="px-4 py-3 text-center font-bold text-lg text-blue-700">{l.he_so ? l.he_so.toFixed(2) : '-'}</td>
+                                                        {/* Hệ số now displayed inside the Ngạch/Bậc/Hệ số cell above; removed separate column */}
                                                     </tr>
                                                 );
                                             })}
@@ -1285,7 +1296,7 @@ export default function PersonnelDetail() {
                         <p><span className="font-bold">Họ và tên:</span> {hoSo?.ho_ten_khai_sinh}</p>
                         <p><span className="font-bold">Đơn vị:</span> {hoSo?.don_vi}</p>
                     </div>
-                    <table className="w-full text-left border-collapse" style={{ border: '1px solid black', tableLayout: 'fixed', wordWrap: 'break-word', fontSize: '9px', lineHeight: '1.2' }}>
+                    <table className="w-full text-left border-collapse" style={{ border: '1px solid black', tableLayout: 'fixed', wordWrap: 'break-word', fontSize: '12px', lineHeight: '1.3' }}>
                         <thead className="bg-gray-100 text-center" style={{ backgroundColor: '#f3f4f6' }}>
                             <tr>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>Từ tháng</th>
@@ -1298,10 +1309,8 @@ export default function PersonnelDetail() {
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>Cấp bậc</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '7%' }}>Chức vụ, CNQS</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '6%' }}>TN CNQS</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '5%' }}>L.Ngạch</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Nhóm</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Bậc</th>
-                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>Hệ số</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '8%' }}>Ngạch/Bậc/Hệ số</th>
+                                <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '4%' }}>Nhóm</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>PC VK</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>HS BL</th>
                                 <th className="px-1 py-1 font-bold border" style={{ border: '1px solid black', width: '3.5%' }}>PC CV</th>
@@ -1310,7 +1319,7 @@ export default function PersonnelDetail() {
                             </tr>
                         </thead>
                         <tbody>
-                            {luong && luong.map((l, index) => (
+                            {luong && sortedLuong.map((l, index) => (
                                 <tr key={l.id}>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.tu_thang || '-'}</td>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.den_thang || '-'}</td>
@@ -1322,10 +1331,8 @@ export default function PersonnelDetail() {
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.cap_bac || '-'}</td>
                                     <td className="px-1 py-1 border" style={{ border: '1px solid black' }}>{l.chuc_vu_cnqs || '-'}</td>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.tn_dam_nhan_cnqs || '-'}</td>
-                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.loai_ngach || '-'}</td>
+                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{(l.loai_ngach || '-') + ((l.bac || '') ? ' / ' + (l.bac) : '') + ((l.he_so || '') ? ' / ' + (Number(l.he_so).toFixed ? Number(l.he_so).toFixed(2) : l.he_so) : '')}</td>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.nhom || '-'}</td>
-                                    <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.bac || '-'}</td>
-                                    <td className="px-1 py-1 text-center font-bold border" style={{ border: '1px solid black' }}>{l.he_so ? Number(l.he_so).toFixed(2) : '-'}</td>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.pc_vk || '-'}</td>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.he_so_bl || '-'}</td>
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.pc_chuc_vu || '-'}</td>
@@ -1333,9 +1340,9 @@ export default function PersonnelDetail() {
                                     <td className="px-1 py-1 text-center border" style={{ border: '1px solid black' }}>{l.tn_bat_dau_dam_nhan || '-'}</td>
                                 </tr>
                             ))}
-                            {(!luong || luong.length === 0) && (
+                            {(!sortedLuong || sortedLuong.length === 0) && (
                                 <tr>
-                                    <td colSpan="19" className="px-1 py-4 text-center italic border" style={{ border: '1px solid black' }}>Chưa có quá trình công tác.</td>
+                                    <td colSpan="18" className="px-1 py-4 text-center italic border" style={{ border: '1px solid black' }}>Chưa có quá trình công tác.</td>
                                 </tr>
                             )}
                         </tbody>

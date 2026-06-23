@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { sortByTimelineDesc } from '../utils/dateSort';
 
 const emptyFormData = {
     tuThang: '',
@@ -150,8 +151,20 @@ const salaryFields = [
     ['thamNienBatDau', 'T.N bắt đầu đảm nhận', 'text', 'mm/yyyy']
 ];
 
+const optionalSalaryColumns = [
+    ['pcVuotKhung', 'PCVK'],
+    ['heSoBaoLuu', 'H\u1ec7 s\u1ed1 BL'],
+    ['pcChucVu', 'PC C.v\u1ee5'],
+    ['pcThamNienNghe', 'PCTN ngh\u1ec1']
+];
+
+const initialColumnVisibility = optionalSalaryColumns.reduce((visibility, [field]) => ({
+    ...visibility,
+    [field]: true
+}), {});
+
 function mapInitialData(data) {
-    return data.map(item => ({
+    return sortByTimelineDesc(data.map(item => ({
         id: item.id || crypto.randomUUID(),
         tuThang: item.tu_thang || '',
         denThang: item.den_thang || '',
@@ -172,7 +185,7 @@ function mapInitialData(data) {
         pcChucVu: item.pc_chuc_vu || '',
         pcThamNienNghe: item.pc_tn_nghe || '',
         thamNienBatDau: item.tn_bat_dau_dam_nhan || ''
-    }));
+    })), row => row.tuThang);
 }
 
 export default function TabLuong({ initialData = [], initialHoSo = {} }) {
@@ -180,6 +193,7 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRowId, setEditingRowId] = useState(null);
     const [formData, setFormData] = useState(emptyFormData);
+    const [visibleColumns, setVisibleColumns] = useState(initialColumnVisibility);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -204,7 +218,7 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
     };
 
     const updateRowField = (id, field, value) => {
-        setRows(prev => prev.map(row => {
+        setRows(prev => sortByTimelineDesc(prev.map(row => {
             if (row.id === id) {
                 const nextRow = { ...row, [field]: value };
                 if (field === 'tuThang') {
@@ -218,14 +232,14 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
                 return nextRow;
             }
             return row;
-        }));
+        }), row => row.tuThang));
     };
 
     const openAddModal = () => {
         setEditingRowId(null);
         let initialForm = { ...emptyFormData };
         if (rows.length > 0) {
-            const lastRow = rows[rows.length - 1];
+            const lastRow = rows[0];
             initialForm = { ...lastRow };
             // Xóa các trường cần nhập mới
             initialForm.id = '';
@@ -285,25 +299,24 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
             ...formData
         };
 
-        setRows(prev => (
+        setRows(prev => sortByTimelineDesc(
             editingRowId
                 ? prev.map(row => (row.id === editingRowId ? nextRow : row))
-                : [...prev, nextRow]
+                : [...prev, nextRow],
+            row => row.tuThang
         ));
         closeModal();
     };
 
     const removeRow = (id) => setRows(prev => prev.filter(row => row.id !== id));
 
-    const moveRow = (index, direction) => {
-        const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= rows.length) return;
-        setRows(prev => {
-            const nextRows = [...prev];
-            [nextRows[index], nextRows[targetIndex]] = [nextRows[targetIndex], nextRows[index]];
-            return nextRows;
-        });
+    const toggleColumn = (field) => {
+        setVisibleColumns(prev => ({ ...prev, [field]: !prev[field] }));
     };
+
+    const isColumnVisible = (field) => visibleColumns[field] !== false;
+
+    const visibleFieldCount = salaryFields.filter(([field]) => isColumnVisible(field)).length;
 
     const renderTableInput = (row, field, type, placeholder) => {
         const isCompactInput = type === 'number' || Boolean(placeholder);
@@ -356,11 +369,29 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
             </div>
 
             <div className="border rounded-md overflow-hidden">
-                <div className="bg-blue-50 p-3 flex justify-between items-center border-b">
-                    <span className="font-bold text-blue-800">34.4 Quá trình công tác và hưởng lương</span>
-                    <button type="button" onClick={openAddModal} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-medium whitespace-nowrap ml-2">
-                        <i className="fas fa-plus"></i> Thêm quá trình
-                    </button>
+                <div className="bg-blue-50 p-3 border-b">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                        <span className="font-bold text-blue-800">{'34.4 Qu\u00e1 tr\u00ecnh c\u00f4ng t\u00e1c v\u00e0 h\u01b0\u1edfng l\u01b0\u01a1ng'}</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-700">
+                                <span className="font-semibold text-gray-600">{'Hi\u1ec3n th\u1ecb c\u1ed9t:'}</span>
+                                {optionalSalaryColumns.map(([field, label]) => (
+                                    <label key={field} className="inline-flex items-center gap-1 rounded border border-blue-200 bg-white px-2 py-1 shadow-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={isColumnVisible(field)}
+                                            onChange={() => toggleColumn(field)}
+                                            className="h-3.5 w-3.5 accent-blue-600"
+                                        />
+                                        <span>{label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            <button type="button" onClick={openAddModal} className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-medium whitespace-nowrap">
+                                <i className="fas fa-plus"></i> {'Th\u00eam qu\u00e1 tr\u00ecnh'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div className="md:hidden text-xs text-blue-600 p-2 bg-blue-50 border-b scroll-hint">
                     <i className="fas fa-table mr-1"></i>Các cột tự xuống dòng để vừa màn hình
@@ -369,8 +400,8 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
                     <table className="w-full table-fixed text-[11px] text-left border-collapse" id="tableLuong">
                         <thead className="text-xs text-gray-700 bg-gray-100 shadow-sm border-b-2 border-gray-300">
                             <tr>
-                                {salaryFields.map(([, label]) => (
-                                    <th key={label} className="border p-1 align-top leading-tight whitespace-normal break-words">{label}</th>
+                                {salaryFields.map(([field, label]) => (
+                                    <th key={field} className={`border p-1 align-top leading-tight whitespace-normal break-words ${isColumnVisible(field) ? '' : 'hidden'}`}>{label}</th>
                                 ))}
                                 <th className="border p-1 text-center align-top leading-tight whitespace-normal break-words">Thao tác</th>
                             </tr>
@@ -378,22 +409,20 @@ export default function TabLuong({ initialData = [], initialHoSo = {} }) {
                         <tbody id="tbodyLuong">
                             {rows.length === 0 ? (
                                 <tr>
-                                    <td colSpan="20" className="p-4 text-center text-gray-500 italic">
+                                    <td colSpan={visibleFieldCount + 1} className="p-4 text-center text-gray-500 italic">
                                         Chưa có dữ liệu quá trình công tác. Hãy bấm "Thêm quá trình".
                                     </td>
                                 </tr>
-                            ) : rows.map((row, index) => (
+                            ) : rows.map(row => (
                                 <tr key={row.id} className="border-b bg-white hover:bg-gray-50 luong-row">
                                     {salaryFields.map(([field, label, type, placeholder]) => (
-                                        <td key={field} className="border p-0.5 align-top whitespace-normal break-words" data-label={label}>
+                                        <td key={field} className={`border p-0.5 align-top whitespace-normal break-words ${isColumnVisible(field) ? '' : 'hidden'}`} data-label={label}>
                                             {renderTableInput(row, field, type, placeholder)}
                                         </td>
                                     ))}
                                     <td className="border p-0.5 text-center align-top">
                                         <div className="flex flex-wrap items-center justify-center gap-0.5">
                                             <button type="button" onClick={() => openEditModal(row)} className="text-blue-600 hover:bg-blue-100 bg-blue-50 p-1 rounded transition-colors" title="Sửa dòng"><i className="fas fa-pen"></i></button>
-                                            <button type="button" onClick={() => moveRow(index, -1)} disabled={index === 0} className="text-gray-700 hover:bg-gray-200 bg-gray-100 p-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Di chuyển lên"><i className="fas fa-arrow-up"></i></button>
-                                            <button type="button" onClick={() => moveRow(index, 1)} disabled={index === rows.length - 1} className="text-gray-700 hover:bg-gray-200 bg-gray-100 p-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Di chuyển xuống"><i className="fas fa-arrow-down"></i></button>
                                             <button type="button" onClick={() => removeRow(row.id)} className="text-red-500 hover:bg-red-200 bg-red-100 p-1 rounded transition-colors" title="Xóa dòng"><i className="fas fa-trash"></i></button>
                                         </div>
                                     </td>

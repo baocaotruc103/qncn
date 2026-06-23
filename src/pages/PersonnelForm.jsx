@@ -209,15 +209,28 @@ function PersonnelForm() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="bg-blue-800 text-white p-4 sm:p-6 rounded-t-lg shadow-md text-center flex justify-between items-center">
+      <div className="bg-blue-800 text-white p-4 sm:p-6 rounded-t-lg shadow-md text-center flex justify-between items-center gap-3">
         <button type="button" onClick={() => navigate(-1)} className="text-blue-200 hover:text-white transition-colors">
             <i className="fas fa-arrow-left text-xl"></i>
         </button>
         <h1 className="text-xl sm:text-2xl font-bold uppercase flex-1">{id ? 'Cập nhật hồ sơ' : 'Nhập liệu hồ sơ mới'}</h1>
-        <div className="w-8"></div> {/* Spacer for balance */}
+        <button
+          type="submit"
+          form="personnel-form"
+          disabled={isSaving}
+          className={`shrink-0 text-white font-bold py-2 px-3 sm:px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out text-sm sm:text-base ${
+            isSaving ? 'bg-blue-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+          }`}
+        >
+          {isSaving ? (
+            <><i className="fas fa-spinner fa-spin mr-2"></i><span className="hidden sm:inline">Đang lưu...</span></>
+          ) : (
+            <><i className="fas fa-save mr-2"></i><span className="hidden sm:inline">Lưu hồ sơ</span><span className="sm:hidden">Lưu</span></>
+          )}
+        </button>
       </div>
 
-      <form className="bg-white shadow-md rounded-b-lg p-3 sm:p-6" onSubmit={handleSave}>
+      <form id="personnel-form" className="bg-white shadow-md rounded-b-lg p-3 sm:p-6" onSubmit={handleSave}>
         <div className="border-b border-gray-200 mb-6 -mx-3 sm:-mx-6 px-3 sm:px-6">
           <nav className="-mb-px flex flex-wrap gap-x-4 gap-y-1 sm:gap-x-8 pb-1" aria-label="Tabs">
             {tabs.map((tab) => (
