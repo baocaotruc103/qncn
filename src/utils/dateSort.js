@@ -38,3 +38,17 @@ export function sortByTimelineDesc(rows, getValue) {
         })
         .map(({ row }) => row);
 }
+
+export function sortByTimelineAsc(rows, getValue) {
+    return [...(rows || [])]
+        .map((row, index) => ({ row, index }))
+        .sort((a, b) => {
+            const timeA = getTimelineTime(getValue(a.row));
+            const timeB = getTimelineTime(getValue(b.row));
+            if (timeA === Number.NEGATIVE_INFINITY && timeB !== Number.NEGATIVE_INFINITY) return 1;
+            if (timeB === Number.NEGATIVE_INFINITY && timeA !== Number.NEGATIVE_INFINITY) return -1;
+            const diff = timeA - timeB;
+            return diff || a.index - b.index;
+        })
+        .map(({ row }) => row);
+}

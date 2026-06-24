@@ -424,10 +424,14 @@ export default function PersonnelDetail() {
         clone.querySelectorAll('style').forEach(style => style.remove());
         const wordPages = clone.querySelectorAll('.a4-page');
         wordPages[wordPages.length - 1]?.classList.add('word-last-page');
+        wordPages.forEach(page => {
+            if (page.classList.contains('salary-landscape-page')) page.classList.add('word-landscape-section');
+            else page.classList.add('word-portrait-section');
+        });
 
         const sectionTitles = clone.querySelectorAll('.section-title');
         sectionTitles.forEach(section => {
-            if (section.textContent.trim().startsWith('VII.')) {
+            if (section.textContent.trim().startsWith('VII.') && !section.closest('.salary-landscape-page')) {
                 section.classList.add('word-page-break');
             }
         });
@@ -532,24 +536,40 @@ export default function PersonnelDetail() {
                         margin: 28.35pt 36pt 28.35pt 36pt;
                         mso-page-orientation: portrait;
                     }
+                    @page SectionLandscape {
+                        size: 841.9pt 595.3pt;
+                        margin: 28.35pt 28.35pt 28.35pt 28.35pt;
+                        mso-page-orientation: landscape;
+                    }
                     div.Section1 { page: Section1; }
                     body {
                         font-family: "Times New Roman", Times, serif;
                         font-size: 11pt;
                         line-height: 1.08;
                         color: #000;
-                        width: ${SALARY_EXPORT_WIDTH_PX}px;
-                        max-width: ${SALARY_EXPORT_WIDTH_PX}px;
                         margin: 0 auto;
                     }
                     .Section1, .print-form-container, .a4-page {
-                        width: ${SALARY_EXPORT_WIDTH_PX}px !important;
-                        max-width: ${SALARY_EXPORT_WIDTH_PX}px !important;
                         min-height: 0 !important;
                         margin: 0 !important;
                         padding: 0 !important;
                         overflow: visible !important;
                         box-sizing: border-box !important;
+                    }
+                    .print-form-container {
+                        width: 100% !important;
+                        max-width: none !important;
+                    }
+                    .word-portrait-section {
+                        page: Section1;
+                        width: 523pt !important;
+                        max-width: 523pt !important;
+                    }
+                    .word-landscape-section {
+                        page: SectionLandscape;
+                        width: 785pt !important;
+                        max-width: 785pt !important;
+                        page-break-before: always;
                     }
                     .a4-page { page-break-after: always; }
                     .a4-page:last-child, .word-last-page { page-break-after: auto; }

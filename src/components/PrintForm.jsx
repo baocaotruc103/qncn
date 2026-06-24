@@ -1,4 +1,4 @@
-import { sortByTimelineDesc } from '../utils/dateSort';
+import { sortByTimelineDesc, sortByTimelineAsc } from '../utils/dateSort';
 
 export default function PrintForm({ data }) {
     if (!data || !data.hoSo) return null;
@@ -25,13 +25,14 @@ export default function PrintForm({ data }) {
     const safeGiaDinh = giaDinh || [];
     const safeKhen = sortByTimelineDesc(khenThuong, item => item.ngayThangNam || item.ngay);
     const safeKy = kyLuat || [];
-    const safeLuong = sortByTimelineDesc(luong, item => item.tuThang || item.tu_thang);
+    const safeLuong = sortByTimelineAsc(luong, item => item.tuThang || item.tu_thang);
 
     return (
         <div className="print-form-container bg-white text-black text-sm" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
             <style dangerouslySetInnerHTML={{ __html: `
-                .print-form-container { width: 196mm; max-width: 196mm; font-size: 12px; line-height: 1.25; }
+                .print-form-container { width: 196mm; max-width: 283mm; font-size: 12px; line-height: 1.25; }
                 .a4-page { width: 196mm; min-height: 283mm; background-color: white; margin: 0 0 6mm 0; padding: 4mm 5mm; box-sizing: border-box; position: relative; overflow: hidden; }
+                .salary-landscape-page { width: 283mm; min-height: 196mm; }
                 @media print {
                     body { background-color: white; padding: 0; }
                     .print-form-container { width: auto; max-width: none; }
@@ -51,10 +52,10 @@ export default function PrintForm({ data }) {
                 th { background-color: #f7f7f7; font-weight: bold; text-align: center !important; vertical-align: middle !important; }
                 td { text-align: left !important; }
                 .print-break-avoid { page-break-inside: avoid; break-inside: avoid; }
-                .salary-table { font-size: 5.5px !important; line-height: 1.15 !important; table-layout: fixed !important; width: 100% !important; }
+                .salary-table { font-size: 6px !important; line-height: 1.15 !important; table-layout: fixed !important; width: 100% !important; }
                 .salary-table th, .salary-table td { padding: 2px !important; border: 0.5pt solid #000 !important; }
                 @media print {
-                    .salary-table { font-size: 5.5px !important; table-layout: fixed !important; }
+                    .salary-table { font-size: 6px !important; table-layout: fixed !important; }
                 }
                 .bold { font-weight: bold; }
                 .italic { font-style: italic; }
@@ -267,6 +268,9 @@ export default function PrintForm({ data }) {
         </table>
 
         
+        </div>
+
+    <div className="a4-page salary-landscape-page">
         <div className="section-title mt-6">VII. Thông tin lương & Quá trình công tác</div>
         <div className="grid grid-cols-12 gap-x-4 mb-4">
             <div className="col-span-4 field-group"><span className="field-label">Bắt đầu đóng BHXH:</span><span className="field-value">{field(hoSo, ['bat_dau_dong_bhxh'])}</span></div>
@@ -276,7 +280,7 @@ export default function PrintForm({ data }) {
 
         <div className="font-bold mt-2 mb-1 text-sm italic">Quá trình công tác và hưởng lương:</div>
         <div className="overflow-x-auto">
-            <table className="salary-table text-[6px] w-full" style={{ tableLayout: "fixed", wordWrap: "break-word", minWidth: "310mm" }}>
+            <table className="salary-table text-[6px] w-full" style={{ tableLayout: "fixed", wordWrap: "break-word", width: "100%" }}>
                 <thead>
                     <tr>
                         <th style={{width: "4.2%", padding: "2px"}}>Từ tháng</th>
@@ -289,7 +293,9 @@ export default function PrintForm({ data }) {
                         <th style={{width: "3.8%", padding: "2px"}}>C.Bậc</th>
                         <th style={{width: "5.2%", padding: "2px"}}>CV/CNQS</th>
                         <th style={{width: "3.8%", padding: "2px"}}>TN CNQS</th>
-                        <th style={{width: "10.2%", padding: "2px"}}>Ngạch/Bậc/Hệ số</th>
+                        <th style={{width: "3.4%", padding: "2px"}}>Ng&#7841;ch</th>
+                        <th style={{width: "3.4%", padding: "2px"}}>B&#7853;c</th>
+                        <th style={{width: "3.4%", padding: "2px"}}>H&#7879; s&#7889;</th>
                         <th style={{width: "2.8%", padding: "2px"}}>Nhóm</th>
                         <th style={{width: "3.2%", padding: "2px"}}>VK%</th>
                         <th style={{width: "3.2%", padding: "2px"}}>BL</th>
@@ -311,7 +317,9 @@ export default function PrintForm({ data }) {
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.capBac || l.cap_bac || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px"}}>{l.chucVu || l.chuc_vu_cnqs || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.thamNienCNQS || l.tn_dam_nhan_cnqs || ""}</td>
-                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{(l.loaiNgach || l.loai_ngach || '') + ((l.bac || '') ? ' / ' + (l.bac) : '') + ((l.heSo || l.he_so) ? ' / ' + (l.heSo || l.he_so) : '')}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.loaiNgach || l.loai_ngach || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.bac || ""}</td>
+                            <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.heSo || l.he_so || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.nhom || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.pcVuotKhung || l.pc_vk || ""}</td>
                             <td style={{wordBreak: 'break-word', padding: "2px", textAlign: 'center'}}>{l.heSoBaoLuu || l.he_so_bl || ""}</td>
